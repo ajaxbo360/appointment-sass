@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface Appointment {
   id: number;
@@ -27,6 +28,7 @@ export default function Dashboard() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const api = useApiClient();
+  const router = useRouter();
 
   useEffect(() => {
     const fetchAppointments = async () => {
@@ -49,9 +51,9 @@ export default function Dashboard() {
         <div className="space-y-6">
           <div className="flex justify-between items-center">
             <h1 className="text-3xl font-bold">Dashboard</h1>
-            <Link href="/appointments/create">
-              <Button>New Appointment</Button>
-            </Link>
+            <Button onClick={() => router.push("/appointments/create")}>
+              Create Appointment
+            </Button>
           </div>
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

@@ -5,58 +5,35 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 
 export default function AuthCallback() {
-  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login } = useAuth();
+  const [processed, setProcessed] = useState(false);
 
   useEffect(() => {
-    const code = searchParams.get("code");
+    // Only process once to prevent infinite loops
+    if (processed) return;
 
-    if (!code) {
-      setError("No authorization code received");
-      return;
-    }
+    const token = searchParams.get("token");
+    const userStr = searchParams.get("user");
 
-    const handleCallback = async () => {
+    if (token && userStr) {
       try {
-        const response = await fetch(
-          `http://localhost:8000/api/auth/google/callback?code=${code}`
-        );
-
-        if (!response.ok) {
-          throw new Error("Authentication failed");
-        }
-
-        const data = await response.json();
-        login(data.token, data.user);
+        const user = JSON.parse(decodeURIComponent(userStr));
+        login(token, user);
+        setProcessed(true);
         router.push("/dashboard");
-      } catch (err: any) {
-        setError(err.message || "Authentication failed");
+      } catch (error) {
+        console.error("Failed to parse user data:", error);
+        setProcessed(true);
+        router.push("/login?error=Invalid user data");
       }
-    };
-
-    handleCallback();
-  }, [searchParams, login, router]);
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-destructive">
-            Authentication Error
-          </h1>
-          <p className="mt-2">{error}</p>
-          <button
-            onClick={() => router.push("/login")}
-            className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded"
-          >
-            Back to Login
-          </button>
-        </div>
-      </div>
-    );
-  }
+    } else {
+      const error = searchParams.get("error");
+      setProcessed(true);
+      router.push(`/login${error ? `?error=${error}` : ""}`);
+    }
+  }, [router, searchParams, login, processed]);
 
   return (
     <div className="flex items-center justify-center min-h-screen">

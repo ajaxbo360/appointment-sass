@@ -18,6 +18,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { login, isAuthenticated } = useAuth();
   const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
 
   // Redirect if already logged in
   if (isAuthenticated) {
@@ -28,15 +29,40 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:8000/api/auth/google", {
-        method: "POST",
+      // First, get the CSRF token
+      await fetch("http://localhost:8000/sanctum/csrf-cookie", {
+        credentials: "include",
       });
-      const data = await response.json();
 
-      // Redirect to Google OAuth URL
-      window.location.href = data.url;
+      // Then make the actual request
+      const apiUrl = `http://localhost:8000/api/auth/google`;
+      console.log("Calling API URL:", apiUrl);
+
+      const response = await fetch(apiUrl, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Response data:", data);
+
+      if (data.url) {
+        // Redirect to Google OAuth
+        window.location.href = data.url;
+      } else {
+        throw new Error("No login URL received");
+      }
     } catch (error) {
       console.error("Login failed:", error);
+      setError(error instanceof Error ? error.message : "Failed to login");
     } finally {
       setIsLoading(false);
     }

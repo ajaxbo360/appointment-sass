@@ -11,29 +11,37 @@ RUN apk add --no-cache \
     unzip
 
 # Install PHP extensions
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath
 
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# Set working directory
 WORKDIR /var/www/html
 
-# Copy existing application directory contents
-COPY . /var/www/html
+# Copy composer files
+COPY composer.json ./
+COPY composer.lock* ./
 
 # Install dependencies
-RUN if [ -f "composer.json" ]; then \
-    composer install --no-interaction; \
-    else \
-    echo "No composer.json found, skipping composer install"; \
-    fi
+RUN composer install --no-scripts --no-autoloader --no-interaction || composer update --no-scripts --no-autoloader --no-interaction
+
+# Copy existing application directory
+COPY . .
+
+# Generate autoload files
+RUN composer dump-autoload --optimize
+
+# Create required middleware classes
+RUN mkdir -p app/Http/Middleware && \
+    echo "<?php namespace App\Http\Middleware; class EncryptCookies extends \Illuminate\Cookie\Middleware\EncryptCookies {}" > app/Http/Middleware/EncryptCookies.php && \
+    echo "<?php namespace App\Http\Middleware; class VerifyCsrfToken extends \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken {}" > app/Http/Middleware/VerifyCsrfToken.php
 
 # Set permissions
-RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache && \
-    chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+RUN chown -R www-data:www-data /var/www/html/storage
 
 # Expose port 8000
 EXPOSE 8000
 
-# Start PHP server
-CMD ["php", "-S", "0.0.0.0:8000", "-t", "public"]
+# Start PHP built-in server
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]

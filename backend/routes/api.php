@@ -7,37 +7,27 @@ use App\Http\Controllers\Api\ProfileController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Auth\GoogleController;
+use Laravel\Sanctum\HasApiTokens;
 
-// Auth routes
-Route::post('/auth/google', 'App\Http\Controllers\Auth\GoogleController@handleLogin');
-Route::post('/auth/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
-
-// Temporary login for testing
-Route::post('/auth/login', function (Request $request) {
-    $credentials = $request->validate([
-        'email' => 'required|email',
-        'password' => 'required',
-    ]);
-
-    if (Auth::attempt($credentials)) {
-        $user = Auth::user();
-        $token = $user->createToken('auth-token')->plainTextToken;
-
-        return response()->json([
-            'user' => $user,
-            'token' => $token,
-        ]);
-    }
-
-    return response()->json(['message' => 'Invalid credentials'], 401);
+// Test route to verify API is working
+Route::get('/test', function () {
+    return response()->json(['message' => 'API is working']);
 });
 
-// User profile
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/user', [ProfileController::class, 'show']);
-    Route::put('/user', [ProfileController::class, 'update']);
+// Google OAuth routes
+Route::post('auth/google', [GoogleController::class, 'handleLogin']);
+Route::get('auth/google/callback', [GoogleController::class, 'callback']);
 
-    // Resource routes
+// Protected routes
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
+
+    Route::post('/auth/logout', [AuthController::class, 'logout']);
+
+    // Resources
     Route::apiResource('appointments', AppointmentController::class);
     Route::apiResource('categories', CategoryController::class);
 });
