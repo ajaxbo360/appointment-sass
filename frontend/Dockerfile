@@ -18,5 +18,12 @@ COPY . .
 # Expose port 3000
 EXPOSE 3000
 
-# Start the application in development mode
-CMD ["npm", "run", "dev"] 
+# Add a healthcheck to ensure the container is ready
+HEALTHCHECK --interval=10s --timeout=3s --start-period=30s \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
+
+# Add this before the CMD line
+ENV HOST=0.0.0.0
+
+# Start the application in development mode with optimizations
+CMD ["npm", "run", "dev", "--", "--turbo"] 

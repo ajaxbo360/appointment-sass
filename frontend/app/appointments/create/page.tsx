@@ -68,21 +68,39 @@ export default function CreateAppointment() {
     setIsLoading(true);
 
     try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        throw new Error("Authentication token not found");
+      }
+
+      console.log(
+        "Sending request to:",
+        `${process.env.NEXT_PUBLIC_API_URL}/appointments`
+      );
+      console.log("With data:", formData);
+
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/appointments`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Accept: "application/json",
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(formData),
         }
       );
 
       if (!response.ok) {
-        throw new Error("Failed to create appointment");
+        const errorData = await response.json().catch(() => null);
+        console.error("API error response:", errorData);
+        throw new Error(errorData?.message || `Error: ${response.status}`);
       }
+
+      const data = await response.json();
+      console.log("API success response:", data);
 
       toast({
         title: "Success",
@@ -91,9 +109,13 @@ export default function CreateAppointment() {
 
       router.push("/dashboard");
     } catch (error) {
+      console.error("Appointment creation error:", error);
       toast({
         title: "Error",
-        description: "Failed to create appointment",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to create appointment",
         variant: "destructive",
       });
     } finally {

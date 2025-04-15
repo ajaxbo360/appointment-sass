@@ -67,6 +67,11 @@ export default function EditAppointment() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        if (!params || !params.id) {
+          router.push("/dashboard");
+          return null;
+        }
+
         // Fetch appointment data
         const appointmentResponse = await api.get(`/appointments/${params.id}`);
         const appointment = appointmentResponse.data;
@@ -102,7 +107,7 @@ export default function EditAppointment() {
     if (params.id) {
       fetchData();
     }
-  }, [params.id, api, toast]);
+  }, [params.id, api, toast, router]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
