@@ -11,10 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('categories', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-        });
+        // Instead of creating a new table, add columns to the existing one
+        Schema::table('categories', function (Blueprint $table) {});
     }
 
     /**
@@ -22,6 +20,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('categories');
+        // Drop the added columns
+        Schema::table('categories', function (Blueprint $table) {});
     }
 };

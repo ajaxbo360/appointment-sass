@@ -18,13 +18,13 @@ sleep 15  # Give more time for the entrypoint script to run
 
 # Check if backend container is running
 if [ "$(docker ps -q -f name=backend)" ]; then
-    # Run migrations
-    echo -e "${YELLOW}Running database migrations...${NC}"
-    docker exec -i backend php artisan migrate --force
+    # Run migrations and seeders
+    echo -e "${YELLOW}Running database migrations and seeders...${NC}"
+    docker exec -i backend php artisan migrate:fresh --seed --force
     if [ $? -eq 0 ]; then
-        echo -e "${GREEN}Migrations completed successfully!${NC}"
+        echo -e "${GREEN}Migrations and seeders completed successfully!${NC}"
     else
-        echo -e "${RED}Failed to run migrations${NC}"
+        echo -e "${RED}Failed to run migrations and seeders${NC}"
         exit 1
     fi
 else
@@ -81,6 +81,10 @@ fi
 echo -e "${YELLOW}Verifying port mappings...${NC}"
 docker port backend
 docker port frontend
+
+# Check for duplicate migrations
+echo -e "${YELLOW}Checking for duplicate migrations...${NC}"
+docker exec -i backend ./check-migrations.sh
 
 echo -e "${GREEN}Development environment is ready!${NC}"
 echo -e "${GREEN}Backend: http://localhost:8000${NC}"
