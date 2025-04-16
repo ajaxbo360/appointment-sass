@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/ui/use-toast";
+import AuthDebug from "@/components/auth-debug";
 
 interface Appointment {
   id: number;
@@ -54,6 +55,7 @@ export default function Dashboard() {
 
   return (
     <ProtectedRoute>
+      <AuthDebug />
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold">Dashboard</h1>

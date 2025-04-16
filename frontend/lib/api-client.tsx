@@ -15,18 +15,61 @@ const ApiClientContext = createContext<ApiClientContextType | undefined>(
 );
 
 export function ApiClientProvider({ children }: { children: React.ReactNode }) {
-  const { token } = useAuth();
+  const { token, logout } = useAuth();
   const [baseUrl, setBaseUrl] = useState<string>("");
+  const [csrfToken, setCsrfToken] = useState<string | null>(null);
 
   useEffect(() => {
     // Use the correct API URL depending on where the code is running
-    // In the browser, use the public URL
     setBaseUrl(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api");
+
+    // Fetch CSRF token on component mount
+    fetchCsrfToken();
   }, []);
+
+  const fetchCsrfToken = async () => {
+    try {
+      // Make a request to the CSRF cookie endpoint
+      const response = await fetch(
+        "http://localhost:8000/sanctum/csrf-cookie",
+        {
+          method: "GET",
+          credentials: "include",
+        }
+      );
+
+      if (response.ok) {
+        // Extract CSRF token from cookies
+        const cookies = document.cookie.split(";");
+        for (const cookie of cookies) {
+          const [name, value] = cookie.trim().split("=");
+          if (name === "XSRF-TOKEN") {
+            // XSRF-TOKEN is URL encoded, so we need to decode it
+            const decodedValue = decodeURIComponent(value);
+            console.log(
+              "CSRF token fetched:",
+              decodedValue.substring(0, 15) + "..."
+            );
+            setCsrfToken(decodedValue);
+            return;
+          }
+        }
+      }
+
+      console.warn("Failed to fetch CSRF token");
+    } catch (error) {
+      console.error("Error fetching CSRF token:", error);
+    }
+  };
 
   const fetchWithAuth = async (endpoint: string, options: RequestInit = {}) => {
     if (!baseUrl) {
       throw new Error("API base URL not initialized");
+    }
+
+    // If we don't have a CSRF token yet, fetch it
+    if (!csrfToken) {
+      await fetchCsrfToken();
     }
 
     const url = `${baseUrl}${
@@ -39,24 +82,74 @@ export function ApiClientProvider({ children }: { children: React.ReactNode }) {
       ...options.headers,
     };
 
+    // Add CSRF token header for non-GET requests
+    if (csrfToken && options.method && options.method !== "GET") {
+      headers["X-XSRF-TOKEN"] = csrfToken;
+    }
+
+    // Only add Authorization header if token exists
     if (token) {
+      console.log(
+        "Adding auth token to request:",
+        token.substring(0, 15) + "..."
+      );
       headers["Authorization"] = `Bearer ${token}`;
+    } else {
+      console.warn("No auth token available for request to:", url);
     }
 
     try {
       console.log(`Making ${options.method || "GET"} request to: ${url}`);
+      console.log("Request headers:", headers);
 
       const response = await fetch(url, {
         ...options,
         headers,
+        credentials: "include",
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `API error: ${response.status}`);
+      console.log(`Response status for ${url}:`, response.status);
+
+      if (response.status === 401) {
+        console.error("Authentication failed - logging out");
+        if (logout) logout();
+        throw new Error("Unauthenticated. Please log in again.");
       }
 
-      return await response.json();
+      if (response.status === 419) {
+        console.error("CSRF token mismatch - refreshing token");
+        await fetchCsrfToken();
+        throw new Error("CSRF token mismatch. Please try again.");
+      }
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorMessage = `API error: ${response.status}`;
+
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.message || errorMessage;
+        } catch (e) {
+          if (errorText) {
+            errorMessage = errorText;
+          }
+        }
+
+        console.error(`API error response:`, {
+          status: response.status,
+          text: errorText,
+        });
+        throw new Error(errorMessage);
+      }
+
+      // Check if the response is empty
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        return await response.json();
+      } else {
+        const text = await response.text();
+        return text ? JSON.parse(text) : {};
+      }
     } catch (error) {
       console.error(`API request failed: ${url}`, error);
       throw error;

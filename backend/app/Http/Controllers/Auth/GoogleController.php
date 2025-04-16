@@ -52,26 +52,29 @@ class GoogleController extends Controller
                     'name' => $googleUser->name,
                     'google_id' => $googleUser->id,
                     'avatar' => $googleUser->avatar,
-                    'password' => bcrypt(Str::random(16))
                 ]
             );
 
+            // Generate a new token
             $token = $user->createToken('auth-token')->plainTextToken;
 
-            Log::info('User authenticated', [
+            // Log the token for debugging (only in development)
+            Log::info('Generated token for user', [
                 'user_id' => $user->id,
-                'token' => $token
+                'token_preview' => substr($token, 0, 10) . '...',
             ]);
 
+            // Redirect to frontend with token
             return redirect()->away(
-                "http://localhost:3000/auth/callback?token={$token}&user=" . urlencode(json_encode($user))
+                "http://localhost:3000/auth/callback?token=" . $token . "&user=" . urlencode(json_encode($user))
             );
         } catch (\Exception $e) {
-            $errorMessage = $e->getMessage() ?: 'Authentication failed';
             Log::error('Google callback error', [
-                'message' => $errorMessage,
+                'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
+
+            $errorMessage = 'Authentication failed: ' . $e->getMessage();
 
             return redirect()->away(
                 "http://localhost:3000/login?error=" . urlencode($errorMessage)

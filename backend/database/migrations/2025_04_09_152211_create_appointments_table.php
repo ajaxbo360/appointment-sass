@@ -11,10 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Instead of creating a new table, add columns to the existing one
-        Schema::table('appointments', function (Blueprint $table) {
-
-            // Add any other custom columns here
+        Schema::create('appointments', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->string('title');
+            $table->text('description')->nullable();
+            $table->date('date');
+            $table->time('time');
+            $table->string('status')->default('scheduled');
+            $table->foreignId('category_id')->nullable()->constrained()->nullOnDelete();
+            $table->timestamps();
         });
     }
 
@@ -23,7 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Drop the added columns
-        Schema::table('appointments', function (Blueprint $table) {});
+        Schema::dropIfExists('appointments');
     }
 };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,12 +31,21 @@ import {
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useApiClient } from "@/lib/api-client";
+
+interface Category {
+  id: number;
+  name: string;
+  color?: string;
+}
 
 export default function CreateAppointment() {
   const router = useRouter();
   const { toast } = useToast();
+  const apiClient = useApiClient();
   const [isLoading, setIsLoading] = useState(false);
   const [date, setDate] = useState<Date | undefined>(undefined);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -44,6 +53,27 @@ export default function CreateAppointment() {
     date: "",
     time: "",
   });
+
+  useEffect(() => {
+    // Fetch categories when component mounts
+    const fetchCategories = async () => {
+      try {
+        const data = await apiClient.get("categories");
+        setCategories(data);
+      } catch (error) {
+        console.error("Failed to fetch categories:", error);
+        // Fallback to default categories if API fails
+        setCategories([
+          { id: 1, name: "Work", color: "#4285F4" },
+          { id: 2, name: "Personal", color: "#EA4335" },
+          { id: 3, name: "Health", color: "#34A853" },
+          { id: 4, name: "Education", color: "#FBBC05" },
+        ]);
+      }
+    };
+
+    fetchCategories();
+  }, [apiClient]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -68,46 +98,19 @@ export default function CreateAppointment() {
     setIsLoading(true);
 
     try {
-      const token = localStorage.getItem("token");
+      console.log("Creating appointment with data:", formData);
 
-      if (!token) {
-        throw new Error("Authentication token not found");
-      }
+      // Use the API client instead of direct fetch
+      const data = await apiClient.post("appointments", formData);
 
-      console.log(
-        "Sending request to:",
-        `${process.env.NEXT_PUBLIC_API_URL}/appointments`
-      );
-      console.log("With data:", formData);
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/appointments`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(formData),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        console.error("API error response:", errorData);
-        throw new Error(errorData?.message || `Error: ${response.status}`);
-      }
-
-      const data = await response.json();
       console.log("API success response:", data);
 
       toast({
-        title: "Success",
-        description: "Appointment created successfully",
+        title: "Success!",
+        description: "Appointment created successfully.",
       });
 
-      router.push("/dashboard");
+      router.push("/appointments");
     } catch (error) {
       console.error("Appointment creation error:", error);
       toast({
@@ -124,15 +127,15 @@ export default function CreateAppointment() {
   };
 
   return (
-    <div className="container mx-auto py-10">
-      <Card className="max-w-2xl mx-auto">
-        <CardHeader>
-          <CardTitle>Create New Appointment</CardTitle>
-          <CardDescription>
-            Fill in the details to schedule a new appointment
-          </CardDescription>
-        </CardHeader>
+    <div className="container max-w-md py-10">
+      <Card>
         <form onSubmit={handleSubmit}>
+          <CardHeader>
+            <CardTitle>Create Appointment</CardTitle>
+            <CardDescription>
+              Schedule a new appointment in your calendar.
+            </CardDescription>
+          </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="title">Title</Label>
@@ -168,10 +171,19 @@ export default function CreateAppointment() {
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">Work</SelectItem>
-                  <SelectItem value="2">Personal</SelectItem>
-                  <SelectItem value="3">Health</SelectItem>
-                  <SelectItem value="4">Education</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={String(category.id)}>
+                      <div className="flex items-center">
+                        {category.color && (
+                          <div
+                            className="w-3 h-3 rounded-full mr-2"
+                            style={{ backgroundColor: category.color }}
+                          />
+                        )}
+                        {category.name}
+                      </div>
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

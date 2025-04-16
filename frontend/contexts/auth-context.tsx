@@ -32,32 +32,63 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const router = useRouter();
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    // Load token from localStorage on client side
-    const storedToken = localStorage.getItem("token");
-    const storedUser = localStorage.getItem("user");
+    // Load auth state from localStorage on component mount
+    const storedToken = localStorage.getItem("auth_token");
+    const storedUser = localStorage.getItem("auth_user");
 
     if (storedToken) {
+      console.log("Found stored token:", storedToken.substring(0, 10) + "...");
       setToken(storedToken);
       setIsAuthenticated(true);
+    }
 
-      if (storedUser) {
-        try {
-          setUser(JSON.parse(storedUser));
-        } catch (e) {
-          console.error("Failed to parse user data", e);
-        }
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error("Failed to parse stored user data:", error);
       }
     }
+
+    setIsLoaded(true);
+
+    // Fetch CSRF token on mount
+    fetchCsrfToken();
   }, []);
 
-  const login = (newToken: string, userData: User) => {
-    localStorage.setItem("token", newToken);
-    localStorage.setItem("user", JSON.stringify(userData));
+  const fetchCsrfToken = async () => {
+    try {
+      // Make a request to the CSRF cookie endpoint
+      const response = await fetch(
+        "http://localhost:8000/sanctum/csrf-cookie",
+        {
+          method: "GET",
+          credentials: "include",
+        }
+      );
+
+      if (response.ok) {
+        console.log("CSRF token cookie set successfully");
+      } else {
+        console.warn("Failed to set CSRF token cookie");
+      }
+    } catch (error) {
+      console.error("Error setting CSRF token cookie:", error);
+    }
+  };
+
+  const login = (newToken: string, newUser: User) => {
+    console.log("Logging in with token:", newToken.substring(0, 10) + "...");
     setToken(newToken);
-    setUser(userData);
-    setIsAuthenticated(true);
+    setUser(newUser);
+    localStorage.setItem("auth_token", newToken);
+    localStorage.setItem("auth_user", JSON.stringify(newUser));
+
+    // Fetch a fresh CSRF token on login
+    fetchCsrfToken();
   };
 
   const logout = () => {
@@ -72,12 +103,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     // Clear local state
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("auth_user");
     setToken(null);
     setUser(null);
     setIsAuthenticated(false);
     router.push("/login");
+    console.log("Logged out, auth data cleared");
   };
 
   const value = {
