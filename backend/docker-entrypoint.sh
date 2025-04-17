@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 set -e
 
 # Check if vendor directory exists
@@ -27,10 +27,9 @@ chown -R www-data:www-data /var/www/html/bootstrap/cache
 chmod -R 775 /var/www/html/storage
 chmod -R 775 /var/www/html/bootstrap/cache
 
-# Clear caches
+# Skip database operations to avoid errors
 echo "Clearing Laravel caches..."
 php artisan config:clear
-php artisan cache:clear
 php artisan route:clear
 php artisan view:clear
 
