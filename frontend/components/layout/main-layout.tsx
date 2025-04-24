@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { MoonIcon, SunIcon } from "lucide-react";
+import { useTheme } from "next-themes";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -10,6 +12,7 @@ interface MainLayoutProps {
 
 export default function MainLayout({ children }: MainLayoutProps) {
   const { user, logout } = useAuth();
+  const { theme } = useTheme();
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -17,7 +20,14 @@ export default function MainLayout({ children }: MainLayoutProps) {
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-6">
             <Link href="/" className="font-bold text-xl">
-              Appointment SaaS
+              <span className="flex items-center">
+                {theme === "dark" ? (
+                  <MoonIcon className="mr-2 h-5 w-5 text-purple-400" />
+                ) : (
+                  <SunIcon className="mr-2 h-5 w-5 text-yellow-500" />
+                )}
+                Appointment SaaS
+              </span>
             </Link>
             <nav className="hidden md:flex gap-6">
               <Link href="/dashboard" className="text-sm font-medium">

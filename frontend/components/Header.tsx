@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CalendarIcon, User, LogOut, Settings } from "lucide-react";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export default function Header() {
   const { isAuthenticated, user, logout } = useAuth();
@@ -53,6 +54,7 @@ export default function Header() {
           )}
         </div>
         <div className="flex items-center gap-4">
+          <ThemeToggle />
           {isAuthenticated ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

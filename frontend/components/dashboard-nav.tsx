@@ -2,9 +2,13 @@
 
 import { useAuth } from "@/contexts/auth-context";
 import { Button } from "./ui/button";
+import { ThemeToggle } from "./ui/theme-toggle";
+import { useTheme } from "next-themes";
+import { MoonIcon, SunIcon } from "lucide-react";
 
 export function DashboardNav() {
   const { user, logout } = useAuth();
+  const { theme } = useTheme();
 
   const handleLogout = () => {
     logout();
@@ -16,7 +20,15 @@ export function DashboardNav() {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <a href="/dashboard" className="font-semibold">
+            <a
+              href="/dashboard"
+              className="font-semibold flex items-center gap-2"
+            >
+              {theme === "dark" ? (
+                <MoonIcon className="h-5 w-5 text-purple-400" />
+              ) : (
+                <SunIcon className="h-5 w-5 text-yellow-500" />
+              )}
               AppointEase
             </a>
             <div className="hidden md:flex items-center gap-4">
@@ -35,6 +47,7 @@ export function DashboardNav() {
             </div>
           </div>
           <div className="flex items-center gap-4">
+            <ThemeToggle />
             {user && (
               <>
                 <span className="text-sm text-muted-foreground">
