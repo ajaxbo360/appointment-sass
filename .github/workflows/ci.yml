@@ -47,20 +47,33 @@ jobs:
           php-version: "8.2"
           extensions: mbstring, xml, ctype, iconv, intl, pdo_mysql, dom, fileinfo
           coverage: xdebug
+          tools: composer:v2
 
       # Backend setup and testing
       - name: Copy CI environment file
         run: cp backend/.env.ci backend/.env
 
-      - name: Generate application key
+      - name: Debug - Check if composer.json exists
         run: |
           cd backend
-          php artisan key:generate --force
+          ls -la
+          if [ -f "composer.json" ]; then echo "composer.json exists"; else echo "composer.json does not exist"; fi
 
       - name: Install Composer dependencies
         run: |
           cd backend
-          composer install --prefer-dist --no-progress --no-suggest
+          composer install --no-ansi --no-interaction --no-progress
+
+      - name: Debug - Check if vendor directory exists
+        run: |
+          cd backend
+          ls -la
+          if [ -d "vendor" ]; then echo "vendor directory exists"; else echo "vendor directory does not exist"; fi
+
+      - name: Generate application key
+        run: |
+          cd backend
+          php artisan key:generate --force
 
       - name: Run Laravel migrations
         run: |
