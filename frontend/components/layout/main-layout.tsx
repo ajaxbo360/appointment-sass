@@ -2,6 +2,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -28,6 +29,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
             </nav>
           </div>
           <div className="flex items-center gap-4">
+            <ThemeToggle />
             {user && (
               <>
                 <Link href="/profile">

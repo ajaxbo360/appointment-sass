@@ -4,6 +4,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/auth-context";
 import { ApiClientProvider } from "@/lib/api-client";
+import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/toaster";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,11 +20,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <AuthProvider>
-          <ApiClientProvider>{children}</ApiClientProvider>
-        </AuthProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AuthProvider>
+            <ApiClientProvider>{children}</ApiClientProvider>
+          </AuthProvider>
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );
