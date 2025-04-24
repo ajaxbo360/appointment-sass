@@ -1,9 +1,8 @@
 <?php
 // routes/api.php
 use App\Http\Controllers\AppointmentController;
-use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\CategoryController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -45,5 +44,19 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Resources
     Route::apiResource('appointments', AppointmentController::class);
-    Route::apiResource('categories', CategoryController::class);
+
+    // Explicitly define each categories route
+    Route::get('/categories', [\App\Http\Controllers\Api\CategoryController::class, 'index']);
+    Route::post('/categories', [\App\Http\Controllers\Api\CategoryController::class, 'store']);
+    Route::get('/categories/{category}', [\App\Http\Controllers\Api\CategoryController::class, 'show']);
+    Route::put('/categories/{category}', [\App\Http\Controllers\Api\CategoryController::class, 'update']);
+    Route::delete('/categories/{category}', [\App\Http\Controllers\Api\CategoryController::class, 'destroy']);
+
+    // Instead of using the imported class
+    Route::apiResource('categories', \App\Http\Controllers\Api\CategoryController::class);
+});
+
+// Add this at the top level, not inside any middleware group
+Route::get('/test', function () {
+    return response()->json(['message' => 'Test route works']);
 });

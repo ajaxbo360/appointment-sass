@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\API;
+namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class CategoryController extends Controller
 {
@@ -16,7 +17,8 @@ class CategoryController extends Controller
         $categories = Category::all();
 
         return response()->json([
-            'data' => $categories
+            'data' => $categories,
+            'message' => 'Categories retrieved successfully'
         ]);
     }
 
@@ -25,16 +27,23 @@ class CategoryController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:categories',
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
             'description' => 'nullable|string',
         ]);
 
-        $category = Category::create($validated);
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $category = Category::create($request->all());
 
         return response()->json([
-            'message' => 'Category created successfully',
-            'data' => $category
+            'data' => $category,
+            'message' => 'Category created successfully'
         ], 201);
     }
 
@@ -43,7 +52,10 @@ class CategoryController extends Controller
      */
     public function show(Category $category)
     {
-        return response()->json($category);
+        return response()->json([
+            'data' => $category,
+            'message' => 'Category retrieved successfully'
+        ]);
     }
 
     /**
@@ -51,16 +63,23 @@ class CategoryController extends Controller
      */
     public function update(Request $request, Category $category)
     {
-        $validated = $request->validate([
-            'name' => 'sometimes|required|string|max:255|unique:categories,name,' . $category->id,
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
             'description' => 'nullable|string',
         ]);
 
-        $category->update($validated);
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $category->update($request->all());
 
         return response()->json([
-            'message' => 'Category updated successfully',
-            'data' => $category
+            'data' => $category,
+            'message' => 'Category updated successfully'
         ]);
     }
 
