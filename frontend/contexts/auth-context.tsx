@@ -27,12 +27,18 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Get API URL from environment variables
+const getApiUrl = () =>
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+const getSanctumUrl = () =>
+  process.env.NEXT_PUBLIC_SANCTUM_URL || "http://localhost:8000/sanctum";
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     // Load auth state from localStorage on component mount
@@ -40,7 +46,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const storedUser = localStorage.getItem("auth_user");
 
     if (storedToken) {
-      console.log("Found stored token:", storedToken.substring(0, 10) + "...");
       setToken(storedToken);
       setIsAuthenticated(true);
     }
@@ -53,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    setIsLoaded(true);
+    setIsLoading(false);
 
     // Fetch CSRF token on mount
     fetchCsrfToken();
@@ -62,17 +67,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchCsrfToken = async () => {
     try {
       // Make a request to the CSRF cookie endpoint
-      const response = await fetch(
-        "http://localhost:8000/sanctum/csrf-cookie",
-        {
-          method: "GET",
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${getSanctumUrl()}/csrf-cookie`, {
+        method: "GET",
+        credentials: "include",
+      });
 
-      if (response.ok) {
-        console.log("CSRF token cookie set successfully");
-      } else {
+      if (!response.ok) {
         console.warn("Failed to set CSRF token cookie");
       }
     } catch (error) {
@@ -80,10 +80,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const apiCall = async <T = any,>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<T> => {
+    const url = `${getApiUrl()}${
+      endpoint.startsWith("/") ? endpoint : `/${endpoint}`
+    }`;
+
+    const headers = new Headers(options.headers);
+
+    if (token) {
+      headers.set("Authorization", `Bearer ${token}`);
+    }
+
+    headers.set("Accept", "application/json");
+
+    if (options.method && options.method !== "GET") {
+      headers.set("Content-Type", "application/json");
+    }
+
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers,
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error(`API request failed: ${url}`, error);
+      throw error;
+    }
+  };
+
   const login = (newToken: string, newUser: User) => {
-    console.log("Logging in with token:", newToken.substring(0, 10) + "...");
     setToken(newToken);
     setUser(newUser);
+    setIsAuthenticated(true);
     localStorage.setItem("auth_token", newToken);
     localStorage.setItem("auth_user", JSON.stringify(newUser));
 
@@ -91,15 +129,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fetchCsrfToken();
   };
 
-  const logout = () => {
+  const logout = async () => {
     // Call logout API
     if (token) {
-      fetch("http://localhost:8000/api/auth/logout", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }).catch(console.error);
+      try {
+        await apiCall("/auth/logout", {
+          method: "POST",
+        });
+      } catch (error) {
+        console.error("Logout API call failed:", error);
+      }
     }
 
     // Clear local state
@@ -109,13 +148,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setIsAuthenticated(false);
     router.push("/login");
-    console.log("Logged out, auth data cleared");
   };
 
   const value = {
     user,
     token,
     isAuthenticated,
+    isLoading,
     login,
     logout,
   };

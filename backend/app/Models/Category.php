@@ -13,6 +13,7 @@ class Category extends Model
     protected $fillable = [
         'name',
         'description',
+        'color',
     ];
 
     public function appointments(): HasMany

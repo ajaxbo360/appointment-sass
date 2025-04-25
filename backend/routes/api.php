@@ -1,13 +1,12 @@
 <?php
 // routes/api.php
-use App\Http\Controllers\AppointmentController;
+use App\Http\Controllers\Api\AppointmentController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Auth\GoogleController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\Auth\GoogleController;
-use Laravel\Sanctum\HasApiTokens;
 use Laravel\Sanctum\Http\Controllers\CsrfCookieController;
 
 /*
@@ -30,33 +29,23 @@ Route::get('/test', function () {
 });
 
 // Public routes
-Route::post('/login', [App\Http\Controllers\Auth\LoginController::class, 'login']);
-Route::get('/auth/google', [App\Http\Controllers\Auth\GoogleController::class, 'redirect']);
-Route::get('/auth/google/callback', [App\Http\Controllers\Auth\GoogleController::class, 'callback']);
+Route::post('/login', [AuthController::class, 'login']);
+Route::get('/auth/google', [GoogleController::class, 'redirect']);
+Route::get('/auth/google/callback', [GoogleController::class, 'callback']);
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
+    // User routes
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
-
     Route::post('/auth/logout', [AuthController::class, 'logout']);
+
+    // Profile routes
+    Route::get('/profile', [ProfileController::class, 'show']);
+    Route::put('/profile', [ProfileController::class, 'update']);
 
     // Resources
     Route::apiResource('appointments', AppointmentController::class);
-
-    // Explicitly define each categories route
-    Route::get('/categories', [\App\Http\Controllers\Api\CategoryController::class, 'index']);
-    Route::post('/categories', [\App\Http\Controllers\Api\CategoryController::class, 'store']);
-    Route::get('/categories/{category}', [\App\Http\Controllers\Api\CategoryController::class, 'show']);
-    Route::put('/categories/{category}', [\App\Http\Controllers\Api\CategoryController::class, 'update']);
-    Route::delete('/categories/{category}', [\App\Http\Controllers\Api\CategoryController::class, 'destroy']);
-
-    // Instead of using the imported class
-    Route::apiResource('categories', \App\Http\Controllers\Api\CategoryController::class);
-});
-
-// Add this at the top level, not inside any middleware group
-Route::get('/test', function () {
-    return response()->json(['message' => 'Test route works']);
+    Route::apiResource('categories', CategoryController::class);
 });

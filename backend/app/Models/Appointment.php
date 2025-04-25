@@ -16,11 +16,15 @@ class Appointment extends Model
         'category_id',
         'user_id',
         'scheduled_at',
+        'start_time',
+        'end_time',
         'status',
     ];
 
     protected $casts = [
         'scheduled_at' => 'datetime',
+        'start_time' => 'datetime',
+        'end_time' => 'datetime',
     ];
 
     public function user(): BelongsTo

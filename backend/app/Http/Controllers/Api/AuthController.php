@@ -11,6 +11,31 @@ use Laravel\Socialite\Facades\Socialite;
 class AuthController extends Controller
 {
     /**
+     * Handle user login
+     */
+    public function login(Request $request)
+    {
+        $credentials = $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+
+        if (Auth::attempt($credentials)) {
+            $user = Auth::user();
+            $token = $user->createToken('auth-token')->plainTextToken;
+
+            return response()->json([
+                'user' => $user,
+                'token' => $token,
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Invalid credentials'
+        ], 401);
+    }
+
+    /**
      * Redirect the user to the Google authentication page.
      */
     public function redirectToGoogle()
