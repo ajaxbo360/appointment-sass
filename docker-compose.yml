@@ -26,6 +26,7 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
+      - frontend_next:/app/.next
     ports:
       - "3000:3000"
     environment:
@@ -83,3 +84,4 @@ networks:
 volumes:
   dbdata:
   backend_vendor:
+  frontend_next:

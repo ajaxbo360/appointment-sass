@@ -12,6 +12,9 @@ RUN npm install
 # Copy the rest of the application
 COPY . .
 
+# Create .next directory with proper permissions
+RUN mkdir -p .next && chmod 777 .next
+
 # Build the application for production
 # RUN npm run build  # Uncomment for production
 
