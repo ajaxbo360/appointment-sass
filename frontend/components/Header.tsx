@@ -14,12 +14,19 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CalendarIcon, User, LogOut, Settings } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 export default function Header() {
   const { isAuthenticated, user, logout } = useAuth();
+  const pathname = usePathname();
 
   const handleLogout = () => {
     logout();
+  };
+
+  const isActivePath = (path: string) => {
+    return pathname === path;
   };
 
   return (
@@ -34,19 +41,31 @@ export default function Header() {
             <nav className="hidden md:flex gap-6">
               <Link
                 href="/dashboard"
-                className="text-sm font-medium transition-colors hover:text-primary"
+                className={cn(
+                  "text-sm font-medium transition-colors hover:text-primary",
+                  isActivePath("/dashboard") &&
+                    "text-primary font-bold border-b-2 border-primary pb-1"
+                )}
               >
                 Dashboard
               </Link>
               <Link
-                href="/appointments/create"
-                className="text-sm font-medium transition-colors hover:text-primary"
+                href="/appointments"
+                className={cn(
+                  "text-sm font-medium transition-colors hover:text-primary",
+                  isActivePath("/appointments") &&
+                    "text-primary font-bold border-b-2 border-primary pb-1"
+                )}
               >
-                New Appointment
+                Appointments
               </Link>
               <Link
                 href="/calendar"
-                className="text-sm font-medium transition-colors hover:text-primary"
+                className={cn(
+                  "text-sm font-medium transition-colors hover:text-primary",
+                  isActivePath("/calendar") &&
+                    "text-primary font-bold border-b-2 border-primary pb-1"
+                )}
               >
                 Calendar
               </Link>
@@ -56,63 +75,63 @@ export default function Header() {
         <div className="flex items-center gap-4">
           <ThemeToggle />
           {isAuthenticated ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="relative h-8 w-8 rounded-full"
-                >
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage
-                      src={user?.avatar || ""}
-                      alt={user?.name || "User"}
-                    />
-                    <AvatarFallback>
-                      {user?.name
-                        ? user.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")
-                            .toUpperCase()
-                        : "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      {user?.name}
-                    </p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      {user?.email}
-                    </p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/profile" className="cursor-pointer">
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Profile</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/settings" className="cursor-pointer">
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="cursor-pointer"
-                  onClick={handleLogout}
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleLogout}
+                aria-label="Logout"
+              >
+                <LogOut className="h-5 w-5" />
+              </Button>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="relative h-8 w-8 rounded-full"
+                  >
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage
+                        src={user?.avatar || ""}
+                        alt={user?.name || "User"}
+                      />
+                      <AvatarFallback>
+                        {user?.name
+                          ? user.name
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")
+                              .toUpperCase()
+                          : "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {user?.name}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile" className="cursor-pointer">
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profile</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/settings" className="cursor-pointer">
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Settings</span>
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           ) : (
             <div className="flex gap-2">
               <Link href="/login">

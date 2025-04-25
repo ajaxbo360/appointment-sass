@@ -20,6 +20,7 @@ import { CalendarIcon, ClockIcon, BadgeInfo, Tag } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Dashboard() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -108,7 +109,11 @@ export default function Dashboard() {
             <CardHeader>
               <CardTitle>Upcoming Appointments</CardTitle>
               <CardDescription>
-                You have {upcomingAppointments.length} upcoming appointments
+                {isLoading ? (
+                  <Skeleton className="h-4 w-32" />
+                ) : (
+                  `You have ${upcomingAppointments.length} upcoming appointments`
+                )}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -119,10 +124,14 @@ export default function Dashboard() {
                   <TabsTrigger value="tomorrow">Tomorrow</TabsTrigger>
                 </TabsList>
                 <TabsContent value="all" className="space-y-4">
-                  {renderAppointmentList(upcomingAppointments)}
+                  {isLoading
+                    ? renderSkeletonAppointments(3)
+                    : renderAppointmentList(upcomingAppointments)}
                 </TabsContent>
                 <TabsContent value="today" className="space-y-4">
-                  {todayAppointments.length > 0 ? (
+                  {isLoading ? (
+                    renderSkeletonAppointments(2)
+                  ) : todayAppointments.length > 0 ? (
                     renderAppointmentList(todayAppointments)
                   ) : (
                     <p className="text-center py-4 text-muted-foreground">
@@ -131,7 +140,9 @@ export default function Dashboard() {
                   )}
                 </TabsContent>
                 <TabsContent value="tomorrow" className="space-y-4">
-                  {tomorrowAppointments.length > 0 ? (
+                  {isLoading ? (
+                    renderSkeletonAppointments(2)
+                  ) : tomorrowAppointments.length > 0 ? (
                     renderAppointmentList(tomorrowAppointments)
                   ) : (
                     <p className="text-center py-4 text-muted-foreground">
@@ -158,47 +169,105 @@ export default function Dashboard() {
               <CardDescription>Overview of your schedule</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <h3 className="font-medium flex items-center">
-                    <CalendarIcon className="mr-2 h-4 w-4" /> Today
-                  </h3>
-                  <Badge variant="outline">{todayAppointments.length}</Badge>
-                </div>
-                <div className="flex justify-between items-center">
-                  <h3 className="font-medium flex items-center">
-                    <CalendarIcon className="mr-2 h-4 w-4" /> Tomorrow
-                  </h3>
-                  <Badge variant="outline">{tomorrowAppointments.length}</Badge>
-                </div>
-                <div className="flex justify-between items-center">
-                  <h3 className="font-medium flex items-center">
-                    <CalendarIcon className="mr-2 h-4 w-4" /> Upcoming
-                  </h3>
-                  <Badge variant="outline">{upcomingAppointments.length}</Badge>
-                </div>
-              </div>
+              {isLoading ? (
+                <>
+                  <div className="space-y-4">
+                    <Skeleton className="h-6 w-full" />
+                    <Skeleton className="h-6 w-full" />
+                    <Skeleton className="h-6 w-full" />
+                  </div>
+                  <div className="border-t pt-4 space-y-2">
+                    <Skeleton className="h-6 w-32 mb-2" />
+                    <div className="flex flex-wrap gap-2">
+                      <Skeleton className="h-6 w-16" />
+                      <Skeleton className="h-6 w-20" />
+                      <Skeleton className="h-6 w-24" />
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-medium flex items-center">
+                        <CalendarIcon className="mr-2 h-4 w-4" /> Today
+                      </h3>
+                      <Badge variant="outline">
+                        {todayAppointments.length}
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-medium flex items-center">
+                        <CalendarIcon className="mr-2 h-4 w-4" /> Tomorrow
+                      </h3>
+                      <Badge variant="outline">
+                        {tomorrowAppointments.length}
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-medium flex items-center">
+                        <CalendarIcon className="mr-2 h-4 w-4" /> Upcoming
+                      </h3>
+                      <Badge variant="outline">
+                        {upcomingAppointments.length}
+                      </Badge>
+                    </div>
+                  </div>
 
-              <div className="border-t pt-4 space-y-2">
-                <h3 className="font-medium mb-2">Categories</h3>
-                <div className="flex flex-wrap gap-2">
-                  {Array.from(
-                    new Set(
-                      appointments.map((apt) => apt.category?.name || "Unknown")
-                    )
-                  ).map((category) => (
-                    <Badge key={category} variant="secondary">
-                      {category}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
+                  <div className="border-t pt-4 space-y-2">
+                    <h3 className="font-medium mb-2">Categories</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {Array.from(
+                        new Set(
+                          appointments.map(
+                            (apt) => apt.category?.name || "Unknown"
+                          )
+                        )
+                      ).map((category) => (
+                        <Badge key={category} variant="secondary">
+                          {category}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         </div>
       </div>
     </ProtectedRoute>
   );
+}
+
+function renderSkeletonAppointments(count: number) {
+  return Array(count)
+    .fill(0)
+    .map((_, index) => (
+      <Card key={`skeleton-${index}`} className="overflow-hidden">
+        <div className="flex">
+          <div className="w-2 bg-gray-300"></div>
+          <div className="flex-1">
+            <CardHeader className="pb-2">
+              <div className="flex justify-between items-start">
+                <div>
+                  <Skeleton className="h-6 w-32 mb-2" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+                <Skeleton className="h-5 w-20" />
+              </div>
+            </CardHeader>
+            <CardContent className="pb-2">
+              <Skeleton className="h-4 w-full mb-2" />
+              <div className="flex items-center space-x-4">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+            </CardContent>
+          </div>
+        </div>
+      </Card>
+    ));
 }
 
 function renderAppointmentList(appointments: Appointment[]) {
@@ -248,29 +317,16 @@ function renderAppointmentList(appointments: Appointment[]) {
               </p>
             )}
             <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-              <div className="flex items-center">
+              <span className="flex items-center">
                 <CalendarIcon className="mr-1 h-3 w-3" />
                 {format(new Date(appointment.start_time), "MMM d, yyyy")}
-              </div>
-              <div className="flex items-center">
+              </span>
+              <span className="flex items-center">
                 <ClockIcon className="mr-1 h-3 w-3" />
-                {format(new Date(appointment.start_time), "h:mm a")} -{" "}
-                {format(new Date(appointment.end_time), "h:mm a")}
-              </div>
+                {format(new Date(appointment.start_time), "h:mm a")}
+              </span>
             </div>
           </CardContent>
-          <CardFooter className="pt-2">
-            <Link href={`/appointments/${appointment.id}`} className="w-full">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start"
-              >
-                <BadgeInfo className="mr-2 h-4 w-4" />
-                View Details
-              </Button>
-            </Link>
-          </CardFooter>
         </div>
       </div>
     </Card>
