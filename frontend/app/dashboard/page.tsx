@@ -89,6 +89,10 @@ export default function Dashboard() {
       new Date(apt.start_time).toDateString() !== tomorrow.toDateString()
   );
 
+  const viewAppointmentDetails = (id: number) => {
+    router.push(`/appointments/${id}`);
+  };
+
   return (
     <ProtectedRoute>
       <div className="space-y-8">
@@ -126,13 +130,19 @@ export default function Dashboard() {
                 <TabsContent value="all" className="space-y-4">
                   {isLoading
                     ? renderSkeletonAppointments(3)
-                    : renderAppointmentList(upcomingAppointments)}
+                    : renderAppointmentList(
+                        upcomingAppointments,
+                        viewAppointmentDetails
+                      )}
                 </TabsContent>
                 <TabsContent value="today" className="space-y-4">
                   {isLoading ? (
                     renderSkeletonAppointments(2)
                   ) : todayAppointments.length > 0 ? (
-                    renderAppointmentList(todayAppointments)
+                    renderAppointmentList(
+                      todayAppointments,
+                      viewAppointmentDetails
+                    )
                   ) : (
                     <p className="text-center py-4 text-muted-foreground">
                       No appointments scheduled for today
@@ -143,7 +153,10 @@ export default function Dashboard() {
                   {isLoading ? (
                     renderSkeletonAppointments(2)
                   ) : tomorrowAppointments.length > 0 ? (
-                    renderAppointmentList(tomorrowAppointments)
+                    renderAppointmentList(
+                      tomorrowAppointments,
+                      viewAppointmentDetails
+                    )
                   ) : (
                     <p className="text-center py-4 text-muted-foreground">
                       No appointments scheduled for tomorrow
@@ -270,7 +283,10 @@ function renderSkeletonAppointments(count: number) {
     ));
 }
 
-function renderAppointmentList(appointments: Appointment[]) {
+function renderAppointmentList(
+  appointments: Appointment[],
+  onClickView: (id: number) => void
+) {
   if (appointments.length === 0) {
     return (
       <div className="text-center py-12">
@@ -283,7 +299,11 @@ function renderAppointmentList(appointments: Appointment[]) {
   }
 
   return appointments.map((appointment) => (
-    <Card key={appointment.id} className="overflow-hidden">
+    <Card
+      key={appointment.id}
+      className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+      onClick={() => onClickView(appointment.id)}
+    >
       <div className="flex">
         {appointment.category?.color && (
           <div
