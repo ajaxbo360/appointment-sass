@@ -44,27 +44,43 @@ class AppointmentSeeder extends Seeder
 
         // Create different types of appointments for each user
         foreach ($users as $user) {
-            // Today's appointments
-            $this->createAppointment($user, $categories->random(), 'Team Standup Meeting', 'Daily team sync to discuss progress and blockers', Carbon::today()->setHour(9)->setMinute(0), 'scheduled');
-            $this->createAppointment($user, $categories->random(), 'Lunch with Client', 'Discuss project requirements and timeline', Carbon::today()->setHour(12)->setMinute(30), 'scheduled');
+            $this->command->info('Creating appointments for user: ' . $user->name . ' (ID: ' . $user->id . ')');
+            $this->createAppointmentsForUser($user, $categories);
+        }
 
-            // Tomorrow's appointments
-            $this->createAppointment($user, $categories->random(), 'Dental Checkup', 'Regular dental cleaning and examination', Carbon::tomorrow()->setHour(10)->setMinute(0), 'scheduled');
-            $this->createAppointment($user, $categories->random(), 'Project Review', 'End of sprint project review with stakeholders', Carbon::tomorrow()->setHour(14)->setMinute(0), 'scheduled');
-
-            // Next week appointments
-            $this->createAppointment($user, $categories->random(), 'Coffee with Mentor', 'Career advice and guidance discussion', Carbon::today()->addDays(5)->setHour(11)->setMinute(0), 'scheduled');
-
-            // Past appointments (completed and cancelled)
-            $this->createAppointment($user, $categories->random(), 'Code Review Session', 'Review PRs and discuss code quality', Carbon::today()->subDays(2)->setHour(15)->setMinute(0), 'completed');
-            $this->createAppointment($user, $categories->random(), 'Team Building Event', 'Office social event with games and activities', Carbon::today()->subDays(5)->setHour(16)->setMinute(0), 'cancelled');
-
-            // Future appointments (next month)
-            $this->createAppointment($user, $categories->random(), 'Annual Performance Review', 'Yearly performance evaluation and goal setting', Carbon::today()->addMonth()->setHour(13)->setMinute(0), 'scheduled');
-            $this->createAppointment($user, $categories->random(), 'Tech Conference', 'Industry conference on latest technologies', Carbon::today()->addMonth()->addDays(5)->setHour(9)->setMinute(0), 'scheduled');
+        // Add additional check for Google user that might have been created after the initial seeding
+        $googleUser = User::where('email', 'like', '%@gmail.com')->first();
+        if ($googleUser && !$users->contains('id', $googleUser->id)) {
+            $this->command->info('Creating appointments for Google user: ' . $googleUser->name . ' (ID: ' . $googleUser->id . ')');
+            $this->createAppointmentsForUser($googleUser, $categories);
         }
 
         $this->command->info('Created appointments successfully!');
+    }
+
+    /**
+     * Create a set of appointments for a specific user
+     */
+    private function createAppointmentsForUser(User $user, $categories): void
+    {
+        // Today's appointments
+        $this->createAppointment($user, $categories->random(), 'Team Standup Meeting', 'Daily team sync to discuss progress and blockers', Carbon::today()->setHour(9)->setMinute(0), 'scheduled');
+        $this->createAppointment($user, $categories->random(), 'Lunch with Client', 'Discuss project requirements and timeline', Carbon::today()->setHour(12)->setMinute(30), 'scheduled');
+
+        // Tomorrow's appointments
+        $this->createAppointment($user, $categories->random(), 'Dental Checkup', 'Regular dental cleaning and examination', Carbon::tomorrow()->setHour(10)->setMinute(0), 'scheduled');
+        $this->createAppointment($user, $categories->random(), 'Project Review', 'End of sprint project review with stakeholders', Carbon::tomorrow()->setHour(14)->setMinute(0), 'scheduled');
+
+        // Next week appointments
+        $this->createAppointment($user, $categories->random(), 'Coffee with Mentor', 'Career advice and guidance discussion', Carbon::today()->addDays(5)->setHour(11)->setMinute(0), 'scheduled');
+
+        // Past appointments (completed and cancelled)
+        $this->createAppointment($user, $categories->random(), 'Code Review Session', 'Review PRs and discuss code quality', Carbon::today()->subDays(2)->setHour(15)->setMinute(0), 'completed');
+        $this->createAppointment($user, $categories->random(), 'Team Building Event', 'Office social event with games and activities', Carbon::today()->subDays(5)->setHour(16)->setMinute(0), 'cancelled');
+
+        // Future appointments (next month)
+        $this->createAppointment($user, $categories->random(), 'Annual Performance Review', 'Yearly performance evaluation and goal setting', Carbon::today()->addMonth()->setHour(13)->setMinute(0), 'scheduled');
+        $this->createAppointment($user, $categories->random(), 'Tech Conference', 'Industry conference on latest technologies', Carbon::today()->addMonth()->addDays(5)->setHour(9)->setMinute(0), 'scheduled');
     }
 
     /**

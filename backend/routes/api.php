@@ -28,6 +28,21 @@ Route::get('/test', function () {
     return response()->json(['message' => 'API is working']);
 });
 
+// Test login route for development purposes
+Route::get('/test-login', function () {
+    $user = \App\Models\User::where('email', 'test@example.com')->first();
+    if (!$user) {
+        return response()->json(['error' => 'Test user not found'], 404);
+    }
+
+    $token = $user->createToken('test-token')->plainTextToken;
+    return response()->json([
+        'token' => $token,
+        'user' => $user,
+        'message' => 'Use this token for testing by copying it to localStorage'
+    ]);
+});
+
 // Public routes
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/auth/google', [GoogleController::class, 'redirect']);

@@ -11,6 +11,7 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
+  CardFooter,
 } from "@/components/ui/card";
 import { toast } from "@/components/ui/use-toast";
 import { mockAppointments, type Appointment } from "@/lib/mock-data";
@@ -21,6 +22,7 @@ import {
   PlusIcon,
   FilterIcon,
   SearchIcon,
+  Eye,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -153,8 +155,7 @@ export default function AppointmentsPage() {
             filteredAppointments.map((appointment) => (
               <Card
                 key={appointment.id}
-                className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => handleAppointmentClick(appointment.id)}
+                className="overflow-hidden hover:shadow-md transition-shadow"
               >
                 <div className="flex">
                   {appointment.category?.color && (
@@ -185,7 +186,7 @@ export default function AppointmentsPage() {
                         </Badge>
                       </div>
                     </CardHeader>
-                    <CardContent className="pb-4">
+                    <CardContent className="pb-2">
                       {appointment.description && (
                         <p className="text-sm text-muted-foreground mb-2 line-clamp-1">
                           {appointment.description}
@@ -205,6 +206,20 @@ export default function AppointmentsPage() {
                         </span>
                       </div>
                     </CardContent>
+                    <CardFooter className="border-t pt-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="ml-auto"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAppointmentClick(appointment.id);
+                        }}
+                      >
+                        <Eye className="h-3.5 w-3.5 mr-2" />
+                        View Details
+                      </Button>
+                    </CardFooter>
                   </div>
                 </div>
               </Card>
