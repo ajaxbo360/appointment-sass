@@ -133,14 +133,9 @@ export default function Header() {
               </DropdownMenu>
             </div>
           ) : (
-            <div className="flex gap-2">
-              <Link href="/login">
-                <Button variant="outline">Log in</Button>
-              </Link>
-              <Link href="/register">
-                <Button>Sign up</Button>
-              </Link>
-            </div>
+            <Link href="/login">
+              <Button>Sign in with Google</Button>
+            </Link>
           )}
         </div>
       </div>

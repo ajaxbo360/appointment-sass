@@ -37,7 +37,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { mockAppointments } from "@/lib/mock-data";
-import ProtectedRoute from "@/components/auth/protected-route";
+import { useAuth } from "@/contexts/auth-context";
 
 interface Appointment {
   id: number;
@@ -60,9 +60,17 @@ export default function AppointmentDetail() {
   const params = useParams();
   const { toast } = useToast();
   const api = useApiClient();
+  const { isAuthenticated, isLoading } = useAuth();
   const [appointment, setAppointment] = useState<Appointment | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingAppointment, setIsLoadingAppointment] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Auth check - redirect if not authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push("/login");
+    }
+  }, [isAuthenticated, isLoading, router]);
 
   // Safely get the ID from params
   const appointmentId = params?.id
@@ -75,8 +83,8 @@ export default function AppointmentDetail() {
 
   useEffect(() => {
     const fetchAppointment = async () => {
-      if (!appointmentId) {
-        setIsLoading(false);
+      if (!appointmentId || !isAuthenticated) {
+        setIsLoadingAppointment(false);
         return;
       }
 
@@ -85,7 +93,7 @@ export default function AppointmentDetail() {
         try {
           const response = await api.get(`/api/appointments/${appointmentId}`);
           setAppointment(response.data);
-          setIsLoading(false);
+          setIsLoadingAppointment(false);
           return;
         } catch (apiError) {
           console.log("API fetch failed, using mock data");
@@ -119,12 +127,12 @@ export default function AppointmentDetail() {
           variant: "destructive",
         });
       } finally {
-        setIsLoading(false);
+        setIsLoadingAppointment(false);
       }
     };
 
     fetchAppointment();
-  }, [appointmentId, api, toast]);
+  }, [appointmentId, api, toast, isAuthenticated]);
 
   const handleDelete = async () => {
     if (!appointmentId) return;
@@ -183,183 +191,185 @@ export default function AppointmentDetail() {
 
   if (isLoading) {
     return (
-      <ProtectedRoute>
-        <div className="container mx-auto py-10">
-          <Card className="max-w-3xl mx-auto">
-            <CardHeader>
-              <Skeleton className="h-8 w-3/4" />
-              <Skeleton className="h-4 w-1/2 mt-2" />
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-3/4" />
-            </CardContent>
-            <CardFooter>
-              <Skeleton className="h-10 w-24" />
-            </CardFooter>
-          </Card>
-        </div>
-      </ProtectedRoute>
+      <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (isLoadingAppointment) {
+    return (
+      <div className="container mx-auto py-10">
+        <Card className="max-w-3xl mx-auto">
+          <CardHeader>
+            <Skeleton className="h-8 w-3/4" />
+            <Skeleton className="h-4 w-1/2 mt-2" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+          </CardContent>
+          <CardFooter>
+            <Skeleton className="h-10 w-24" />
+          </CardFooter>
+        </Card>
+      </div>
     );
   }
 
   if (!appointment) {
     return (
-      <ProtectedRoute>
-        <div className="container mx-auto py-10 text-center">
-          <h2 className="text-2xl font-bold">Appointment not found</h2>
-          <p className="mt-2 text-muted-foreground">
-            The appointment you're looking for doesn't exist or you don't have
-            permission to view it.
-          </p>
-          <Button className="mt-4" onClick={() => router.push("/appointments")}>
-            Back to Appointments
-          </Button>
-        </div>
-      </ProtectedRoute>
+      <div className="container mx-auto py-10 text-center">
+        <h2 className="text-2xl font-bold">Appointment not found</h2>
+        <p className="mt-2 text-muted-foreground">
+          The appointment you're looking for doesn't exist or you don't have
+          permission to view it.
+        </p>
+        <Button className="mt-4" onClick={() => router.push("/appointments")}>
+          Back to Appointments
+        </Button>
+      </div>
     );
   }
 
   const appointmentDate = new Date(appointment.start_time);
 
   return (
-    <ProtectedRoute>
-      <div className="container mx-auto py-10">
-        <Card className="max-w-3xl mx-auto">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mb-2"
-                  onClick={() => router.push("/appointments")}
-                >
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back to Appointments
-                </Button>
-                <CardTitle className="text-2xl">{appointment.title}</CardTitle>
-                <div className="flex items-center mt-2">
-                  <Badge
-                    style={{
-                      backgroundColor: appointment.category?.color || "#888888",
-                    }}
-                  >
-                    {appointment.category?.name || "Uncategorized"}
-                  </Badge>
-                  {getStatusBadge(appointment.status)}
-                </div>
-              </div>
-              <div className="flex space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    appointmentId &&
-                    router.push(`/appointments/${appointmentId}/edit`)
-                  }
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </Button>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="destructive" size="sm">
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete Appointment</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Are you sure you want to delete this appointment? This
-                        action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={handleDelete}
-                        disabled={isDeleting}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                      >
-                        {isDeleting ? "Deleting..." : "Delete"}
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-6">
+    <div className="container mx-auto py-10">
+      <Card className="max-w-3xl mx-auto">
+        <CardHeader>
+          <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-medium">Description</h3>
-              <p className="mt-2 text-muted-foreground">
-                {appointment.description || "No description provided"}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center">
-                <Calendar className="h-5 w-5 mr-2 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-medium">Date</p>
-                  <p className="text-sm text-muted-foreground">
-                    {format(appointmentDate, "PPPP")}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <Clock className="h-5 w-5 mr-2 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-medium">Time</p>
-                  <p className="text-sm text-muted-foreground">
-                    {format(appointmentDate, "p")} -{" "}
-                    {format(new Date(appointment.end_time), "p")}
-                  </p>
-                </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mb-2"
+                onClick={() => router.push("/appointments")}
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Appointments
+              </Button>
+              <CardTitle className="text-2xl">{appointment.title}</CardTitle>
+              <div className="flex items-center mt-2">
+                <Badge
+                  style={{
+                    backgroundColor: appointment.category?.color || "#888888",
+                  }}
+                >
+                  {appointment.category?.name || "Uncategorized"}
+                </Badge>
+                {getStatusBadge(appointment.status)}
               </div>
             </div>
-
-            <div className="border-t pt-4">
-              <p className="text-xs text-muted-foreground">
-                Created:{" "}
-                {format(new Date(appointment.created_at || Date.now()), "PPp")}
-                {appointment.updated_at !== appointment.created_at && (
-                  <>
-                    <br />
-                    Last updated:{" "}
-                    {format(
-                      new Date(appointment.updated_at || Date.now()),
-                      "PPp"
-                    )}
-                  </>
-                )}
-              </p>
+            <div className="flex space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  appointmentId &&
+                  router.push(`/appointments/${appointmentId}/edit`)
+                }
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Edit
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm">
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Appointment</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete this appointment? This
+                      action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDelete}
+                      disabled={isDeleting}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      {isDeleting ? "Deleting..." : "Delete"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
-          </CardContent>
-          <CardFooter className="flex justify-between border-t pt-4">
-            <Button
-              variant="default"
-              onClick={() => router.push("/calendar")}
-              className="flex items-center"
-            >
-              <Calendar className="mr-2 h-4 w-4" />
-              View in Calendar
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => router.push("/appointments")}
-              className="flex items-center"
-            >
-              <ListChecks className="mr-2 h-4 w-4" />
-              All Appointments
-            </Button>
-          </CardFooter>
-        </Card>
-      </div>
-    </ProtectedRoute>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div>
+            <h3 className="text-lg font-medium">Description</h3>
+            <p className="mt-2 text-muted-foreground">
+              {appointment.description || "No description provided"}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-center">
+              <Calendar className="h-5 w-5 mr-2 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium">Date</p>
+                <p className="text-sm text-muted-foreground">
+                  {format(appointmentDate, "PPPP")}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center">
+              <Clock className="h-5 w-5 mr-2 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium">Time</p>
+                <p className="text-sm text-muted-foreground">
+                  {format(appointmentDate, "p")} -{" "}
+                  {format(new Date(appointment.end_time), "p")}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t pt-4">
+            <p className="text-xs text-muted-foreground">
+              Created:{" "}
+              {format(new Date(appointment.created_at || Date.now()), "PPp")}
+              {appointment.updated_at !== appointment.created_at && (
+                <>
+                  <br />
+                  Last updated:{" "}
+                  {format(
+                    new Date(appointment.updated_at || Date.now()),
+                    "PPp"
+                  )}
+                </>
+              )}
+            </p>
+          </div>
+        </CardContent>
+        <CardFooter className="flex justify-between border-t pt-4">
+          <Button
+            variant="default"
+            onClick={() => router.push("/calendar")}
+            className="flex items-center"
+          >
+            <Calendar className="mr-2 h-4 w-4" />
+            View in Calendar
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => router.push("/appointments")}
+            className="flex items-center"
+          >
+            <ListChecks className="mr-2 h-4 w-4" />
+            All Appointments
+          </Button>
+        </CardFooter>
+      </Card>
+    </div>
   );
 }
