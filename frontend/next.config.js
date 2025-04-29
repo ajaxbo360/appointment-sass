@@ -1,11 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // If you're using the App Router, uncomment the following:
-  // experimental: {
-  //   appDir: true,
-  // },
-
+  experimental: {
+    appDir: true,
+  },
+  swcMinify: true,
   async rewrites() {
     return [
       {

@@ -1,5 +1,6 @@
+"use client";
+
 import "@/styles/globals.css";
-import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/auth-context";
@@ -9,11 +10,6 @@ import { Toaster } from "@/components/ui/toaster";
 
 const inter = Inter({ subsets: ["latin"] });
 
-export const metadata: Metadata = {
-  title: "AppointEase",
-  description: "Appointment scheduling made easy",
-};
-
 export default function RootLayout({
   children,
 }: {
@@ -21,6 +17,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <title>AppointEase</title>
+        <meta name="description" content="Appointment scheduling made easy" />
+      </head>
       <body className={inter.className}>
         <ThemeProvider
           attribute="class"

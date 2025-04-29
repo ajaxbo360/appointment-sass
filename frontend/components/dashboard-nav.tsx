@@ -17,11 +17,17 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export function DashboardNav() {
   const { user, logout } = useAuth();
   const { theme } = useTheme();
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -32,6 +38,10 @@ export function DashboardNav() {
     return pathname === path;
   };
 
+  if (!mounted) {
+    return null; // or a loading skeleton
+  }
+
   return (
     <nav className="border-b bg-background">
       <div className="container mx-auto px-4 py-4">
@@ -41,7 +51,7 @@ export function DashboardNav() {
               href="/dashboard"
               className="font-semibold flex items-center gap-2"
             >
-              {theme === "dark" ? (
+              {mounted && theme === "dark" ? (
                 <MoonIcon className="h-5 w-5 text-purple-400" />
               ) : (
                 <SunIcon className="h-5 w-5 text-yellow-500" />

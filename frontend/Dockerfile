@@ -1,4 +1,4 @@
-FROM node:18-alpine
+FROM node:18.17-alpine
 
 # Set working directory
 WORKDIR /app
@@ -27,6 +27,8 @@ HEALTHCHECK --interval=10s --timeout=3s --start-period=30s \
 
 # Add this before the CMD line
 ENV HOST=0.0.0.0
+ENV NODE_ENV=development
+ENV NEXT_TELEMETRY_DISABLED=1
 
-# Start the application in development mode with optimizations
-CMD ["npm", "run", "dev", "--", "--turbo"] 
+# Start the application in development mode
+CMD ["npm", "run", "dev"] 
