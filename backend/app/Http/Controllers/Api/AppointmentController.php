@@ -8,9 +8,12 @@ use Illuminate\Http\Request;
 use App\Http\Resources\AppointmentResource;
 use App\Http\Requests\StoreAppointmentRequest;
 use App\Http\Requests\UpdateAppointmentRequest;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class AppointmentController extends Controller
 {
+    use AuthorizesRequests;
+
     /**
      * Display a listing of the resource.
      */
@@ -29,18 +32,20 @@ class AppointmentController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'category_id' => 'required|exists:categories,id',
-            'date' => 'required|date',
-            'time' => 'required',
+            'date' => 'required|date_format:Y-m-d',
+            'time' => 'required|date_format:H:i',
         ]);
 
         $appointment = $request->user()->appointments()->create([
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
             'category_id' => $validated['category_id'],
-            'scheduled_at' => $validated['date'] . ' ' . $validated['time'],
+            'date' => $validated['date'],
+            'time' => $validated['time'],
+            'status' => 'scheduled'
         ]);
 
-        return response()->json($appointment, 201);
+        return new AppointmentResource($appointment->load('category'));
     }
 
     /**
@@ -66,18 +71,19 @@ class AppointmentController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'category_id' => 'required|exists:categories,id',
-            'date' => 'required|date',
-            'time' => 'required',
+            'date' => 'required|date_format:Y-m-d',
+            'time' => 'required|date_format:H:i',
         ]);
 
         $appointment->update([
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
             'category_id' => $validated['category_id'],
-            'scheduled_at' => $validated['date'] . ' ' . $validated['time'],
+            'date' => $validated['date'],
+            'time' => $validated['time']
         ]);
 
-        return response()->json($appointment->fresh()->load('category'));
+        return new AppointmentResource($appointment->fresh()->load('category'));
     }
 
     /**
