@@ -7,6 +7,7 @@ use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvi
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Log;
 
 class RouteServiceProvider extends ServiceProvider
 {
@@ -24,19 +25,23 @@ class RouteServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        \Log::info('Starting RouteServiceProvider boot');
+        Log::info('Starting RouteServiceProvider boot');
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
 
         $this->routes(function () {
+            Log::info('RouteServiceProvider: Loading API routes...');
             Route::middleware('api')
                 ->prefix('api')
                 ->group(base_path('routes/api.php'));
+            Log::info('RouteServiceProvider: Finished loading API routes.');
 
+            Log::info('RouteServiceProvider: Loading WEB routes...');
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));
+            Log::info('RouteServiceProvider: Finished loading WEB routes.');
         });
-        \Log::info('Completed RouteServiceProvider boot');
+        Log::info('Completed RouteServiceProvider boot');
     }
 }

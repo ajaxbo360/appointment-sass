@@ -29,13 +29,13 @@ RUN composer install --no-scripts
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html
 
-# Expose port 8000
-EXPOSE 8000
+# Expose port 9000 for PHP-FPM
+EXPOSE 9000
 
-# Use a custom entrypoint script
+# Use a custom entrypoint script (ensure it starts php-fpm if needed)
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 ENTRYPOINT ["docker-entrypoint.sh"]
 
-# Start PHP built-in server
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+# Explicitly start PHP-FPM as the main process
+CMD ["php-fpm"]

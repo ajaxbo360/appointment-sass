@@ -1,7 +1,7 @@
 version: '3'
 
 services:
-  # Laravel Backend
+  # Laravel Backend (PHP-FPM)
   backend:
     container_name: backend
     build:
@@ -10,10 +10,20 @@ services:
     volumes:
       - ./backend:/var/www/html
       - backend_vendor:/var/www/html/vendor
+    networks:
+      - app-network
+
+  # Nginx Web Server (for backend)
+  nginx:
+    container_name: nginx
+    image: nginx:alpine
     ports:
-      - "8000:8000"
+      - "8000:80"
+    volumes:
+      - ./backend:/var/www/html
+      - ./backend/nginx/default.conf:/etc/nginx/conf.d/default.conf
     depends_on:
-      - db
+      - backend
     networks:
       - app-network
 
@@ -30,13 +40,13 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - API_URL=http://backend:8000/api
+      - API_URL=http://nginx:80/api
       - NEXT_PUBLIC_API_URL=http://localhost:8000/api
       - NODE_ENV=development
     networks:
       - app-network
     depends_on:
-      - backend
+      - nginx
 
   # MySQL Database
   db:

@@ -63,4 +63,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Resources
     Route::apiResource('appointments', AppointmentController::class);
     Route::apiResource('categories', CategoryController::class);
+
+    // Explicit Category Routes (Keep commented out for now)
+    // Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+    // Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
+    // Route::get('/categories/{category}', [CategoryController::class, 'show'])->name('categories.show');
+    // Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
+    // Route::patch('/categories/{category}', [CategoryController::class, 'update']);
+    // Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
 });
