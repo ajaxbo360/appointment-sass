@@ -238,11 +238,30 @@ When clicking "Add to Google Calendar" on the shared appointment page, users wer
 - [ ] Confirm the appointment details are correctly passed to Google Calendar
 - [ ] Ensure the iCal download works correctly
 
-## How to Track Issues
+## Duplicate Page Header
 
-- To mark a task as completed, change `- [ ]` to `- [x] ✅`
-- Example: `- [x] ✅ Locate the component rendering the appointment creation form`
-- When an issue is completely resolved, add a "RESOLVED" tag at the top level issue heading
+### Problem
+
+The appointment detail page had a duplicate navigation header appearing at the top of the page, causing confusion and poor user experience.
+
+### Investigation
+
+1. Analyzed the Next.js layout structure and found nested layout files
+2. Discovered redundant layout files: `appointments/layout.tsx` and `appointments/[id]/layout.tsx`
+3. Both layout files were including the same `DashboardNav` component
+4. This caused the navigation bar to render twice on appointment detail pages
+
+### Fix Implemented
+
+1. Removed the redundant `appointments/[id]/layout.tsx` file
+2. Relied on the parent layout file (`appointments/layout.tsx`) to provide the navigation
+3. This maintains the correct layout hierarchy in Next.js while eliminating duplication
+
+### Verification
+
+- Confirmed the appointment detail page now shows only one navigation header
+- Verified that all functionality and styling remains correct
+- Checked that navigation links work properly
 
 # Issues Tracker
 
@@ -333,3 +352,63 @@ When clicking "Add to Google Calendar" on the shared appointment page, users wer
 - Tested clicking the Google Calendar button and confirmed it now properly redirects to Google Calendar
 - Verified the appointment details are correctly passed to Google Calendar
 - Confirmed the iCal download works correctly
+
+## Duplicate Page Header
+
+- [x] ✅ Status: Resolved
+- **Created**: October 8, 2023
+- **Priority**: High
+- **Owner**: Dev Team
+
+### Description
+
+The appointment detail page had a duplicate navigation header appearing at the top of the page, causing confusion and poor user experience.
+
+### Investigation
+
+1. Analyzed the Next.js layout structure and found nested layout files
+2. Discovered redundant layout files: `appointments/layout.tsx` and `appointments/[id]/layout.tsx`
+3. Both layout files were including the same `DashboardNav` component
+4. This caused the navigation bar to render twice on appointment detail pages
+
+### Fix Implemented
+
+1. Removed the redundant `appointments/[id]/layout.tsx` file
+2. Relied on the parent layout file (`appointments/layout.tsx`) to provide the navigation
+3. This maintains the correct layout hierarchy in Next.js while eliminating duplication
+
+### Verification
+
+- Confirmed the appointment detail page now shows only one navigation header
+- Verified that all functionality and styling remains correct
+- Checked that navigation links work properly
+
+## Remove "Coming Soon" Badge from Appointment Creation
+
+- [x] ✅ Status: Resolved
+- **Created**: October 8, 2023
+- **Priority**: Medium
+- **Owner**: Dev Team
+
+### Description
+
+The appointment creation feature was finalized, but the "Coming Soon" badges still appeared on the "Create Appointment" buttons, misleading users into thinking the feature wasn't available.
+
+### Investigation
+
+1. Found that the appointment creation buttons in `frontend/app/appointments/page.tsx` were:
+   - Displaying "Coming Soon" badges
+   - Disabled with the `disabled` attribute
+   - Preventing users from accessing the now fully functional appointment creation feature
+
+### Fix Implemented
+
+1. Removed the "Coming Soon" badges from all appointment creation buttons
+2. Enabled the buttons by removing the `disabled` attribute
+3. Confirmed the buttons now properly redirect to the appointment creation page
+
+### Verification
+
+- Confirmed that the appointment creation buttons are now active
+- Verified users can click the buttons to navigate to the creation form
+- Tested the complete flow from clicking the button to successfully creating an appointment

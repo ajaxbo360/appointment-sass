@@ -132,13 +132,10 @@ export default function AppointmentsPage() {
           </p>
         </div>
         <div className="relative">
-          <Button onClick={() => router.push("/appointments/create")} disabled>
+          <Button onClick={() => router.push("/appointments/create")}>
             <PlusIcon className="h-4 w-4 mr-2" />
             New Appointment
           </Button>
-          <Badge className="absolute -top-3 -right-3 bg-amber-500 hover:bg-amber-500/90">
-            Coming Soon
-          </Badge>
         </div>
       </div>
 
@@ -266,16 +263,10 @@ export default function AppointmentsPage() {
               </p>
               {!searchTerm && !statusFilter && (
                 <div className="relative inline-block">
-                  <Button
-                    onClick={() => router.push("/appointments/create")}
-                    disabled
-                  >
+                  <Button onClick={() => router.push("/appointments/create")}>
                     <PlusIcon className="h-4 w-4 mr-2" />
                     Create Appointment
                   </Button>
-                  <Badge className="absolute -top-3 -right-3 bg-amber-500 hover:bg-amber-500/90">
-                    Coming Soon
-                  </Badge>
                 </div>
               )}
             </CardContent>
