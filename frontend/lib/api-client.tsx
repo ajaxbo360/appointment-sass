@@ -9,20 +9,29 @@ interface ApiClientContextType {
   put: <T = any>(endpoint: string, data?: any) => Promise<T>;
   patch: <T = any>(endpoint: string, data?: any) => Promise<T>;
   delete: <T = any>(endpoint: string) => Promise<T>;
+  isReady: boolean;
 }
 
 const ApiClientContext = createContext<ApiClientContextType | undefined>(
   undefined
 );
 
+// Default API URL if environment variable is not set
+const DEFAULT_API_URL = "http://localhost:8000/api";
+
 export function ApiClientProvider({ children }: { children: React.ReactNode }) {
   const { token, logout } = useAuth();
-  const [baseUrl, setBaseUrl] = useState<string>("");
+  const [baseUrl, setBaseUrl] = useState<string>(DEFAULT_API_URL); // Initialize with default
   const [csrfToken, setCsrfToken] = useState<string | null>(null);
+  const [isReady, setIsReady] = useState<boolean>(false);
 
   useEffect(() => {
     // Use the correct API URL depending on where the code is running
-    setBaseUrl(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api");
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL;
+    setBaseUrl(apiUrl);
+
+    // Mark the client as ready after URL is set
+    setIsReady(true);
 
     // Fetch CSRF token on component mount
     fetchCsrfToken();
@@ -63,15 +72,6 @@ export function ApiClientProvider({ children }: { children: React.ReactNode }) {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> => {
-    if (!baseUrl) {
-      throw new Error("API base URL not initialized");
-    }
-
-    // If we don't have a CSRF token yet, fetch it
-    if (!csrfToken) {
-      await fetchCsrfToken();
-    }
-
     // Ensure endpoint starts with '/' and doesn't include '/api' if baseUrl already has it
     const normalizedEndpoint = endpoint.startsWith("/")
       ? endpoint
@@ -165,6 +165,7 @@ export function ApiClientProvider({ children }: { children: React.ReactNode }) {
       }),
     delete: <T = any,>(endpoint: string) =>
       fetchWithAuth<T>(endpoint, { method: "DELETE" }),
+    isReady, // Expose the ready state
   };
 
   return (

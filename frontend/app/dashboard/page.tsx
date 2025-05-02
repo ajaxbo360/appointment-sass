@@ -32,6 +32,15 @@ export default function Dashboard() {
     const fetchAppointments = async () => {
       try {
         console.log("Fetching appointments...");
+
+        // Check if API client is ready before attempting to fetch
+        if (!api.isReady) {
+          console.log("API client not ready, using mock data");
+          setAppointments(mockAppointments);
+          setIsLoading(false);
+          return;
+        }
+
         // Try to fetch from API first
         try {
           const data = await api.get("/api/appointments");

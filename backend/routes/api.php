@@ -1,6 +1,7 @@
 <?php
 // routes/api.php
 use App\Http\Controllers\Api\AppointmentController;
+use App\Http\Controllers\Api\AppointmentShareController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ProfileController;
@@ -48,6 +49,16 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/auth/google', [GoogleController::class, 'redirect']);
 Route::get('/auth/google/callback', [GoogleController::class, 'callback']);
 
+// Public appointment share routes (rate limited)
+Route::middleware('throttle:60,1')->group(function () {
+    Route::get('/appointments/share/{token}', [AppointmentShareController::class, 'viewPublicAppointment'])
+        ->name('appointments.public.view');
+    Route::get('/appointments/share/{token}/ical', [AppointmentShareController::class, 'downloadICalendar'])
+        ->name('appointments.public.ical');
+    Route::get('/appointments/share/{token}/google-calendar', [AppointmentShareController::class, 'getGoogleCalendarUrl'])
+        ->name('appointments.public.google');
+});
+
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
     // User routes
@@ -63,6 +74,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Resources
     Route::apiResource('appointments', AppointmentController::class);
     Route::apiResource('categories', CategoryController::class);
+
+    // Appointment sharing routes
+    Route::post('/appointments/{appointment}/share', [AppointmentShareController::class, 'createShare'])
+        ->name('appointments.share.create');
+    Route::delete('/appointments/shares/{share}', [AppointmentShareController::class, 'revokeShare'])
+        ->name('appointments.share.revoke');
 
     // Explicit Category Routes (Keep commented out for now)
     // Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');

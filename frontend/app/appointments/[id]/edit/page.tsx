@@ -33,6 +33,7 @@ import { CalendarIcon, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useApiClient } from "@/lib/api-client";
 import { Skeleton } from "@/components/ui/skeleton";
+import { mockCategories } from "@/lib/mock-data";
 
 interface Category {
   id: number;
@@ -72,13 +73,73 @@ export default function EditAppointment() {
           return null;
         }
 
+        // Check if API client is ready
+        if (!api.isReady) {
+          console.log(
+            "[Categories Debug] API client not ready yet, cannot fetch appointment data"
+          );
+          toast({
+            title: "Error",
+            description:
+              "API service is not available. Please try again later.",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+
+        const id = params.id;
+
         // Fetch appointment data
-        const appointmentResponse = await api.get(`/appointments/${params.id}`);
+        const appointmentResponse = await api.get(`/appointments/${id}`);
         const appointment = appointmentResponse.data;
 
         // Fetch categories
-        const categoriesResponse = await api.get("/categories");
-        setCategories(categoriesResponse.data.data || []);
+        let categoryData = [];
+        try {
+          console.log("[Categories Debug] Fetching categories from API");
+          const categoriesResponse = await api.get("/categories");
+          console.log(
+            "[Categories Debug] Categories API response:",
+            categoriesResponse
+          );
+
+          if (categoriesResponse && categoriesResponse.data) {
+            if (Array.isArray(categoriesResponse.data)) {
+              console.log(
+                "[Categories Debug] Using direct array from data property"
+              );
+              categoryData = categoriesResponse.data;
+            } else if (
+              categoriesResponse.data.data &&
+              Array.isArray(categoriesResponse.data.data)
+            ) {
+              console.log("[Categories Debug] Using nested data.data array");
+              categoryData = categoriesResponse.data.data;
+            } else {
+              console.log(
+                "[Categories Debug] Response format unexpected, using empty array"
+              );
+              categoryData = [];
+            }
+          }
+        } catch (error) {
+          console.error(
+            "[Categories Debug] Failed to fetch categories:",
+            error
+          );
+          console.log(
+            "[Categories Debug] Using mock categories instead:",
+            mockCategories
+          );
+          categoryData = mockCategories;
+        }
+
+        console.log(
+          "[Categories Debug] Final category data being used:",
+          categoryData
+        );
+        setCategories(categoryData);
 
         // Parse the scheduled_at date
         const scheduledDate = new Date(appointment.scheduled_at);
@@ -104,10 +165,10 @@ export default function EditAppointment() {
       }
     };
 
-    if (params.id) {
+    if (params && params.id) {
       fetchData();
     }
-  }, [params.id, api, toast, router]);
+  }, [params, api, toast, router]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -132,6 +193,10 @@ export default function EditAppointment() {
     setIsSaving(true);
 
     try {
+      if (!params || !params.id) {
+        throw new Error("Appointment ID is missing");
+      }
+
       await api.put(`/appointments/${params.id}`, formData);
 
       toast({

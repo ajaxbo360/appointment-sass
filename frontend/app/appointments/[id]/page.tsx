@@ -22,6 +22,7 @@ import {
   Clock,
   CheckCircle2,
   ListChecks,
+  Share2,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -38,6 +39,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { mockAppointments } from "@/lib/mock-data";
 import { useAuth } from "@/contexts/auth-context";
+import ShareAppointmentModal from "@/components/appointments/ShareAppointmentModal";
 
 interface Appointment {
   id: number;
@@ -89,6 +91,13 @@ export default function AppointmentDetail() {
       }
 
       try {
+        // Check if API client is ready
+        if (!api.isReady) {
+          console.log("API client not ready, using mock data");
+          loadMockAppointment();
+          return;
+        }
+
         // First try to get from API
         try {
           const response = await api.get(`/api/appointments/${appointmentId}`);
@@ -99,26 +108,7 @@ export default function AppointmentDetail() {
           console.log("API fetch failed, using mock data");
         }
 
-        // If API fails, use mock data
-        const id = parseInt(appointmentId, 10);
-        const mockAppointment = mockAppointments.find((a) => a.id === id);
-
-        if (mockAppointment) {
-          // Convert mock appointment to expected format
-          const formattedAppointment = {
-            ...mockAppointment,
-            created_at: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-            updated_at: new Date().toISOString(),
-          };
-
-          setAppointment(formattedAppointment as Appointment);
-        } else {
-          toast({
-            title: "Error",
-            description: "Appointment not found",
-            variant: "destructive",
-          });
-        }
+        loadMockAppointment();
       } catch (error) {
         console.error("Failed to fetch appointment:", error);
         toast({
@@ -128,6 +118,35 @@ export default function AppointmentDetail() {
         });
       } finally {
         setIsLoadingAppointment(false);
+      }
+    };
+
+    // Helper function to load mock appointment
+    const loadMockAppointment = () => {
+      // If API fails, use mock data
+      if (!appointmentId) {
+        setIsLoadingAppointment(false);
+        return;
+      }
+
+      const id = parseInt(appointmentId, 10);
+      const mockAppointment = mockAppointments.find((a) => a.id === id);
+
+      if (mockAppointment) {
+        // Convert mock appointment to expected format
+        const formattedAppointment = {
+          ...mockAppointment,
+          created_at: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+          updated_at: new Date().toISOString(),
+        };
+
+        setAppointment(formattedAppointment as Appointment);
+      } else {
+        toast({
+          title: "Error",
+          description: "Appointment not found",
+          variant: "destructive",
+        });
       }
     };
 
@@ -248,53 +267,57 @@ export default function AppointmentDetail() {
                 onClick={() => router.push("/appointments")}
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Appointments
+                Back
               </Button>
-              <CardTitle className="text-2xl">{appointment.title}</CardTitle>
-              <div className="flex items-center mt-2">
-                <Badge
-                  style={{
-                    backgroundColor: appointment.category?.color || "#888888",
-                  }}
-                >
-                  {appointment.category?.name || "Uncategorized"}
-                </Badge>
-                {getStatusBadge(appointment.status)}
+              <div className="flex items-center">
+                <CardTitle className="text-2xl">{appointment.title}</CardTitle>
+                {appointment.status && getStatusBadge(appointment.status)}
               </div>
+              {appointment.category && (
+                <CardDescription className="mt-1 flex items-center">
+                  <div
+                    className="w-3 h-3 rounded-full mr-2"
+                    style={{ backgroundColor: appointment.category.color }}
+                  ></div>
+                  {appointment.category.name}
+                </CardDescription>
+              )}
             </div>
             <div className="flex space-x-2">
+              <ShareAppointmentModal appointment={appointment} />
+
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() =>
-                  appointmentId &&
                   router.push(`/appointments/${appointmentId}/edit`)
                 }
               >
-                <Edit className="h-4 w-4 mr-2" />
+                <Edit className="mr-2 h-4 w-4" />
                 Edit
               </Button>
+
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="destructive" size="sm">
-                    <Trash2 className="h-4 w-4 mr-2" />
+                    <Trash2 className="mr-2 h-4 w-4" />
                     Delete
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Appointment</AlertDialogTitle>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Are you sure you want to delete this appointment? This
-                      action cannot be undone.
+                      This will permanently delete this appointment. This action
+                      cannot be undone.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                     <AlertDialogAction
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                       onClick={handleDelete}
                       disabled={isDeleting}
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                     >
                       {isDeleting ? "Deleting..." : "Delete"}
                     </AlertDialogAction>

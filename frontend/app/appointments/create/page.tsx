@@ -32,6 +32,7 @@ import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useApiClient } from "@/lib/api-client";
+import { mockCategories } from "@/lib/mock-data";
 
 interface Category {
   id: number;
@@ -57,18 +58,47 @@ export default function CreateAppointment() {
   useEffect(() => {
     // Fetch categories when component mounts
     const fetchCategories = async () => {
+      // Check if API client is ready before making the request
+      if (!apiClient.isReady) {
+        console.log(
+          "[Categories Debug] API client not ready yet, using mock categories"
+        );
+        console.log("[Categories Debug] Mock data:", mockCategories);
+        setCategories(mockCategories);
+        return;
+      }
+
       try {
-        const data = await apiClient.get("categories");
-        setCategories(data);
+        console.log(
+          "[Categories Debug] API client ready, fetching from API endpoint"
+        );
+        const response = await apiClient.get("categories");
+        console.log("[Categories Debug] API response:", response);
+
+        // Ensure we're working with an array of categories
+        if (response && Array.isArray(response)) {
+          console.log("[Categories Debug] Using direct array response");
+          setCategories(response);
+        } else if (response && response.data && Array.isArray(response.data)) {
+          // Some APIs wrap data in a data property
+          console.log("[Categories Debug] Using nested data array response");
+          setCategories(response.data);
+        } else {
+          console.error(
+            "[Categories Debug] Unexpected categories format:",
+            response
+          );
+          // Fallback to default categories
+          console.log("[Categories Debug] Falling back to mock data");
+          setCategories(mockCategories);
+        }
       } catch (error) {
-        console.error("Failed to fetch categories:", error);
+        console.error("[Categories Debug] Failed to fetch categories:", error);
         // Fallback to default categories if API fails
-        setCategories([
-          { id: 1, name: "Work", color: "#4285F4" },
-          { id: 2, name: "Personal", color: "#EA4335" },
-          { id: 3, name: "Health", color: "#34A853" },
-          { id: 4, name: "Education", color: "#FBBC05" },
-        ]);
+        console.log(
+          "[Categories Debug] Falling back to mock data due to error"
+        );
+        setCategories(mockCategories);
       }
     };
 
@@ -126,6 +156,9 @@ export default function CreateAppointment() {
     }
   };
 
+  // Ensure we always have an array of categories to work with
+  const categoriesArray = Array.isArray(categories) ? categories : [];
+
   return (
     <div className="container max-w-md py-10">
       <Card>
@@ -171,7 +204,7 @@ export default function CreateAppointment() {
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((category) => (
+                  {categoriesArray.map((category) => (
                     <SelectItem key={category.id} value={String(category.id)}>
                       <div className="flex items-center">
                         {category.color && (

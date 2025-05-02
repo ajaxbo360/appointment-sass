@@ -55,6 +55,15 @@ export default function AppointmentsPage() {
     const fetchAppointments = async () => {
       try {
         setIsLoadingAppointments(true);
+
+        // Check if API client is ready before making the request
+        if (!api.isReady) {
+          console.log("API client not ready, using mock data");
+          setAppointments(mockAppointments);
+          setIsLoadingAppointments(false);
+          return;
+        }
+
         // Try to fetch from API first
         try {
           const data = await api.get("/api/appointments");

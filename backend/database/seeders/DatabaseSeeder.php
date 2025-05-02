@@ -16,6 +16,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Run TestDataSeeder for appointment sharing feature
+        $this->call([
+            TestDataSeeder::class,
+        ]);
+
         // Create categories first
         $categories = [
             ['name' => 'Work', 'color' => '#4f46e5', 'description' => 'Work-related appointments and meetings'],
