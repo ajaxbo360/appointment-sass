@@ -16,6 +16,7 @@ import { CalendarIcon, User, LogOut, Settings } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import NotificationBell from "@/components/notifications/NotificationBell";
 
 export default function Header() {
   const { isAuthenticated, user, logout } = useAuth();
@@ -76,6 +77,7 @@ export default function Header() {
           <ThemeToggle />
           {isAuthenticated ? (
             <div className="flex items-center gap-2">
+              <NotificationBell />
               <Button
                 variant="ghost"
                 size="icon"

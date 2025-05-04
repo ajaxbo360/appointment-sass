@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Laravel\Sanctum\Http\Controllers\CsrfCookieController;
@@ -80,6 +81,13 @@ Route::middleware('auth:sanctum')->group(function () {
         ->name('appointments.share.create');
     Route::delete('/appointments/shares/{share}', [AppointmentShareController::class, 'revokeShare'])
         ->name('appointments.share.revoke');
+
+    // Notification routes
+    Route::prefix('notifications')->group(function () {
+        Route::get('/preferences', [NotificationController::class, 'getPreferences']);
+        Route::put('/preferences', [NotificationController::class, 'updatePreferences']);
+        Route::get('/history', [NotificationController::class, 'getHistory']);
+    });
 
     // Explicit Category Routes (Keep commented out for now)
     // Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');

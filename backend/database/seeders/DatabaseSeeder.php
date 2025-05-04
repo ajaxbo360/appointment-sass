@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
         // Run TestDataSeeder for appointment sharing feature
         $this->call([
             TestDataSeeder::class,
+            NotificationSeeder::class,
         ]);
 
         // Create categories first

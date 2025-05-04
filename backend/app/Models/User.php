@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class User extends Authenticatable
 {
@@ -47,8 +49,36 @@ class User extends Authenticatable
     /**
      * Get the appointments for the user.
      */
-    public function appointments()
+    public function appointments(): HasMany
     {
         return $this->hasMany(Appointment::class);
+    }
+
+    /**
+     * Get the notifications for the user.
+     */
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class);
+    }
+
+    /**
+     * Get the notification preferences for the user.
+     */
+    public function notificationPreference(): HasOne
+    {
+        return $this->hasOne(NotificationPreference::class);
+    }
+
+    /**
+     * Get or create notification preferences for the user.
+     */
+    public function getOrCreateNotificationPreference(): NotificationPreference
+    {
+        return $this->notificationPreference ?? $this->notificationPreference()->create([
+            'email_enabled' => true,
+            'browser_enabled' => true,
+            'default_reminder_minutes' => 30,
+        ]);
     }
 }

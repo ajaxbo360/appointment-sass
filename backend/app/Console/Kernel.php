@@ -14,7 +14,8 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        $schedule->command('inspire')->hourly();
+        $schedule->command('app:send-due-notifications')->everyMinute();
     }
 
     /**
@@ -22,9 +23,12 @@ class Kernel extends ConsoleKernel
      */
     protected function commands(): void
     {
-        $this->load(__DIR__.'/Commands');
+        $this->load(__DIR__ . '/Commands');
 
         require base_path('routes/console.php');
-   }
+    }
 
     protected $commands = [
+        \App\Console\Commands\SendDueNotifications::class,
+    ];
+}

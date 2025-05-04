@@ -12,6 +12,10 @@ const customJestConfig = {
   moduleNameMapper: {
     "^@/components/(.*)$": "<rootDir>/components/$1",
     "^@/pages/(.*)$": "<rootDir>/pages/$1",
+    "^@/lib/(.*)$": "<rootDir>/lib/$1",
+    "^@/contexts/(.*)$": "<rootDir>/contexts/$1",
+    "^@/app/(.*)$": "<rootDir>/app/$1",
+    "^@/utils/(.*)$": "<rootDir>/utils/$1",
   },
 };
 
