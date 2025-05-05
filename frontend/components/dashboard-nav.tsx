@@ -18,6 +18,7 @@ import {
 } from "./ui/dropdown-menu";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import NotificationBell from "./notifications/NotificationBell";
 
 export function DashboardNav() {
   const { user, logout } = useAuth();
@@ -98,6 +99,7 @@ export function DashboardNav() {
             <ThemeToggle />
             {user && (
               <div className="flex items-center gap-2">
+                <NotificationBell />
                 <Button
                   variant="ghost"
                   size="icon"

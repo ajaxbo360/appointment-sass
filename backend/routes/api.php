@@ -84,9 +84,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Notification routes
     Route::prefix('notifications')->group(function () {
+        Route::get('/', [NotificationController::class, 'index']);
         Route::get('/preferences', [NotificationController::class, 'getPreferences']);
         Route::put('/preferences', [NotificationController::class, 'updatePreferences']);
         Route::get('/history', [NotificationController::class, 'getHistory']);
+        Route::post('/{id}/read', [NotificationController::class, 'markAsRead']);
+        Route::post('/read-all', [NotificationController::class, 'markAllAsRead']);
     });
 
     // Explicit Category Routes (Keep commented out for now)

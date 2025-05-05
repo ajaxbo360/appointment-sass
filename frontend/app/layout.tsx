@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/auth-context";
 import { ApiClientProvider } from "@/lib/api-client";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
+import { NotificationProvider } from "@/contexts/notification-context";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -29,7 +30,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AuthProvider>
-            <ApiClientProvider>{children}</ApiClientProvider>
+            <ApiClientProvider>
+              <NotificationProvider>{children}</NotificationProvider>
+            </ApiClientProvider>
           </AuthProvider>
           <Toaster />
         </ThemeProvider>

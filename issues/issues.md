@@ -544,3 +544,68 @@ For production, a proper mail server will need to be configured. Options include
 
 - Adding mailpit service to docker-compose.yml for local development
 - Using a third-party mail service like Mailgun, SendGrid, etc. for production
+
+## NotificationProvider Missing in Component Tree
+
+**Error Message:**
+
+```
+Unhandled Runtime Error
+Error: useNotifications must be used within a NotificationProvider
+
+Source
+contexts/notification-context.tsx (42:10) @ useNotifications
+
+  40 | const context = useContext(NotificationContext);
+  41 | if (context === undefined) {
+> 42 |   throw new Error(
+     |        ^
+  43 |     "useNotifications must be used within a NotificationProvider"
+  44 |   );
+  45 | }
+```
+
+**Description:**
+The `NotificationBell` component is using the `useNotifications` hook, but it's not wrapped in a `NotificationProvider`. The context provider needs to be added to the component tree to make the notification functionality available.
+
+**Status:** Resolved
+
+**Solution:**
+
+1. Added the `NotificationProvider` to the root layout (`app/layout.tsx`):
+
+   ```tsx
+   <AuthProvider>
+     <ApiClientProvider>
+       <NotificationProvider>{children}</NotificationProvider>
+     </ApiClientProvider>
+   </AuthProvider>
+   ```
+
+2. Imported and added the `NotificationBell` component to the main layout header:
+
+   ```tsx
+   import NotificationBell from "@/components/notifications/NotificationBell";
+
+   // Then in the layout JSX:
+   <div className="flex items-center gap-4">
+     <ThemeToggle />
+     {user && (
+       <>
+         <NotificationBell />
+         <Link href="/profile">
+           <Button variant="ghost" size="sm">
+             {user.name}
+           </Button>
+         </Link>
+         <Button size="sm" onClick={logout}>
+           Sign Out
+         </Button>
+       </>
+     )}
+   </div>;
+   ```
+
+3. This fix ensures that the `NotificationProvider` is available throughout the application, and the `NotificationBell` component can access the notification context via the `useNotifications` hook.
+
+4. The error occurs because React context consumers (components using hooks like `useNotifications`) must be rendered inside their corresponding provider component (`NotificationProvider`) in the component tree. Without the provider, the context value is undefined, triggering the error.

@@ -106,7 +106,7 @@
 
         <div class="footer">
             <p>This is an automated message. Please do not reply to this email.</p>
-            <p>&copy; {{ date('Y') }} Appointment SaaS. All rights reserved.</p>
+            <p>&copy; {{ date('Y') }} AppointEase. All rights reserved.</p>
         </div>
     </div>
 </body>

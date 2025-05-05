@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { MoonIcon, SunIcon } from "lucide-react";
 import { useTheme } from "next-themes";
+import NotificationBell from "@/components/notifications/NotificationBell";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -26,7 +27,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 ) : (
                   <SunIcon className="mr-2 h-5 w-5 text-yellow-500" />
                 )}
-                Appointment SaaS
+                AppointEase
               </span>
             </Link>
             <nav className="hidden md:flex gap-6">
@@ -42,6 +43,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
             <ThemeToggle />
             {user && (
               <>
+                <NotificationBell />
                 <Link href="/profile">
                   <Button variant="ghost" size="sm">
                     {user.name}
@@ -59,8 +61,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
       <footer className="border-t py-4">
         <div className="container flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} Appointment SaaS. All rights
-            reserved.
+            &copy; {new Date().getFullYear()} AppointEase. All rights reserved.
           </p>
         </div>
       </footer>

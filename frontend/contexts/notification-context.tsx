@@ -90,8 +90,22 @@ export function NotificationProvider({
 
     try {
       setIsLoading(true);
+      console.log("Fetching notifications...");
       const response = await apiClient.get("/notifications");
-      const data = response.data;
+      console.log("Full API response:", response);
+
+      // Check if response exists
+      if (!response) {
+        console.error("API returned empty response");
+        setError(new Error("Empty API response"));
+        setNotifications([]);
+        setUnreadCount(0);
+        return;
+      }
+
+      // Handle the API response structure correctly
+      const data = response;
+      console.log("Processed notification data:", data);
 
       // Update state with fetched notifications
       setNotifications(data.notifications || []);
@@ -125,17 +139,15 @@ export function NotificationProvider({
         );
         setLastNotificationId(maxId);
       }
-
-      setError(null);
-    } catch (err) {
-      console.error("Error fetching notifications:", err);
-      setError(
-        err instanceof Error ? err : new Error("Failed to fetch notifications")
-      );
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      setError(error instanceof Error ? error : new Error(String(error)));
+      setNotifications([]);
+      setUnreadCount(0);
     } finally {
       setIsLoading(false);
     }
-  }, [hasNotificationPermission, lastNotificationId, apiClient]);
+  }, [apiClient, hasNotificationPermission, lastNotificationId]);
 
   // Mark a notification as read
   const markAsRead = useCallback(

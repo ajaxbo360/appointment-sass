@@ -19,11 +19,11 @@ class NotificationSeeder extends Seeder
     {
         $this->command->info('Creating test notifications...');
 
-        // Find a test user, or get the first user
-        $user = User::where('email', 'test@example.com')->first() ?? User::first();
+        // Get the user with ID 2
+        $user = User::find(2);
 
         if (!$user) {
-            $this->command->error('No users found to create notifications for!');
+            $this->command->error('User with ID 2 not found!');
             return;
         }
 
@@ -78,8 +78,10 @@ class NotificationSeeder extends Seeder
 
         $this->command->info("Created browser notification scheduled for: " . $browserNotification->scheduled_at->format('Y-m-d H:i:s') . " (Due immediately)");
 
-        // Also create a notification for an existing appointment
-        $existingAppointment = Appointment::where('id', '!=', $appointment->id)->first();
+        // Also create a notification for an existing appointment for user 2
+        $existingAppointment = Appointment::where('id', '!=', $appointment->id)
+            ->where('user_id', $user->id)
+            ->first();
 
         if ($existingAppointment) {
             $notification = Notification::create([

@@ -39,5 +39,20 @@ if [ -d "/var/www/html/vendor" ]; then
     php artisan view:clear
 fi
 
+# Check if we should run the scheduler
+if [ "$1" = "scheduler" ]; then
+    echo "Starting Laravel Scheduler..."
+    exec php artisan schedule:work
+fi
+
+# Check if we should run the PHP-FPM with scheduler as background process
+if [ "$1" = "php-fpm-with-scheduler" ]; then
+    echo "Starting Laravel Scheduler in background..."
+    php artisan schedule:work &
+
+    echo "Starting PHP-FPM..."
+    exec php-fpm
+fi
+
 # Run any provided command
 exec "$@"

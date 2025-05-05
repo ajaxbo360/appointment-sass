@@ -76,14 +76,37 @@ class Appointment extends Model
         // Get the user's notification preferences
         $preferences = $this->user->getOrCreateNotificationPreference();
 
-        // Use appointment-specific reminder time or user's default
+        // Calculate time until appointment starts (in minutes)
+        $minutesUntilStart = now()->diffInMinutes($this->start_time, false);
+
+        // Set notification type
+        $notificationType = 'reminder';
+
+        // Determine if this appointment is starting soon
+        $isStartingSoon = false;
+
+        // Set scheduled time for the notification
+        $scheduledAt = now(); // Default to immediate notification
+
+        // Get the reminder minutes (from appointment or default)
         $reminderMinutes = $this->reminder_minutes ?? $preferences->default_reminder_minutes;
 
-        // Calculate when the notification should be sent
-        $scheduledAt = (clone $this->start_time)->subMinutes($reminderMinutes);
-
-        // Skip if the scheduled time is in the past
-        if ($scheduledAt->isPast()) {
+        // Case 1: Appointment is in the future with enough time for the normal reminder
+        if ($minutesUntilStart > $reminderMinutes) {
+            // Standard reminder - schedule for reminder_minutes before start
+            $scheduledAt = (clone $this->start_time)->subMinutes($reminderMinutes);
+            $notificationType = 'reminder';
+        }
+        // Case 2: Appointment is in the future but happening soon (less than reminder_minutes)
+        else if ($minutesUntilStart > 0) {
+            // It's an imminent appointment - notify immediately
+            $scheduledAt = now();
+            $notificationType = 'starting_soon';
+            $isStartingSoon = true;
+        }
+        // Case 3: Appointment has already started (minutesUntilStart <= 0)
+        else {
+            // Don't create notifications for appointments that already started
             return;
         }
 
@@ -99,7 +122,7 @@ class Appointment extends Model
         foreach ($channels as $channel) {
             $this->notifications()->create([
                 'user_id' => $this->user_id,
-                'type' => 'reminder',
+                'type' => $notificationType,
                 'channel' => $channel,
                 'scheduled_at' => $scheduledAt,
                 'status' => 'pending',
@@ -107,6 +130,7 @@ class Appointment extends Model
                     'title' => $this->title,
                     'start_time' => $this->start_time,
                     'location' => $this->location ?? '',
+                    'is_starting_soon' => $isStartingSoon
                 ])
             ]);
         }

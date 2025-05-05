@@ -12,6 +12,7 @@ services:
       - backend_vendor:/var/www/html/vendor
     networks:
       - app-network
+    command: ["php-fpm-with-scheduler"]
 
   # Nginx Web Server (for backend)
   nginx:

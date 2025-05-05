@@ -24,6 +24,7 @@ class Notification extends Model
         'status',
         'scheduled_at',
         'sent_at',
+        'read_at',
         'error_message',
     ];
 
@@ -35,6 +36,7 @@ class Notification extends Model
     protected $casts = [
         'scheduled_at' => 'datetime',
         'sent_at' => 'datetime',
+        'read_at' => 'datetime',
         'data' => 'json',
     ];
 
@@ -84,5 +86,26 @@ class Notification extends Model
     public function scopeDue($query)
     {
         return $query->where('scheduled_at', '<=', now());
+    }
+
+    /**
+     * Check if the notification is unread.
+     */
+    public function isUnread(): bool
+    {
+        return is_null($this->read_at);
+    }
+
+    /**
+     * Mark the notification as read.
+     */
+    public function markAsRead(): self
+    {
+        if ($this->isUnread()) {
+            $this->read_at = now();
+            $this->save();
+        }
+
+        return $this;
     }
 }
