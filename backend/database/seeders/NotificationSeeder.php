@@ -19,11 +19,11 @@ class NotificationSeeder extends Seeder
     {
         $this->command->info('Creating test notifications...');
 
-        // Get the user with ID 2
-        $user = User::find(2);
+        // Get the first available user instead of hardcoding ID 2
+        $user = User::first();
 
         if (!$user) {
-            $this->command->error('User with ID 2 not found!');
+            $this->command->error('No users found! Please run DatabaseSeeder first.');
             return;
         }
 

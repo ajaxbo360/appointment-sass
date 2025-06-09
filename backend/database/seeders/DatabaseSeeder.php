@@ -39,17 +39,21 @@ class DatabaseSeeder extends Seeder
             );
         }
 
-        // Find or create the user
-        $user = User::firstOrCreate(
-            ['email' => 'ajakak.2016@gmail.com'],
-            [
-                'name' => 'Test User',
-                'password' => Hash::make('password'),
-                'email_verified_at' => now(),
-                'google_id' => 'temp_' . time(), // Temporary Google ID
-                'avatar' => 'https://ui-avatars.com/api/?name=Test+User', // Default avatar
-            ]
-        );
+        // Find or create the user - Use a more intelligent approach
+        // Try to find the most recently created user (likely the current user)
+        $user = User::orderBy('created_at', 'desc')->first();
+
+        if (!$user) {
+            // If no users exist, create a default one
+            $user = User::firstOrCreate(
+                ['email' => 'demo@example.com'],
+                [
+                    'name' => 'Demo User',
+                    'password' => Hash::make('password'),
+                    'email_verified_at' => now(),
+                ]
+            );
+        }
 
         $this->command->info("Creating appointments for user: {$user->email}");
 

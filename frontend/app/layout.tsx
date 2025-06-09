@@ -8,6 +8,7 @@ import { ApiClientProvider } from "@/lib/api-client";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import { NotificationProvider } from "@/contexts/notification-context";
+import { AppointmentReminderPopup } from "@/components/appointment-reminder-popup";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -31,7 +32,10 @@ export default function RootLayout({
         >
           <AuthProvider>
             <ApiClientProvider>
-              <NotificationProvider>{children}</NotificationProvider>
+              <NotificationProvider>
+                {children}
+                <AppointmentReminderPopup />
+              </NotificationProvider>
             </ApiClientProvider>
           </AuthProvider>
           <Toaster />

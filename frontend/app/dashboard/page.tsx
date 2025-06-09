@@ -74,6 +74,7 @@ export default function Dashboard() {
 
   // Group appointments by date
   const today = new Date();
+  today.setHours(0, 0, 0, 0); // Set to start of today to include all appointments from today
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
 
