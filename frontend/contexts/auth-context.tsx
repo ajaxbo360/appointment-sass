@@ -40,7 +40,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
+  // Check if current route is a public share route
+  const isPublicRoute =
+    typeof window !== "undefined" &&
+    window.location.pathname.includes("/share/appointment/");
+
   useEffect(() => {
+    // For public share routes, skip auth initialization
+    if (isPublicRoute) {
+      setIsLoading(false);
+      return;
+    }
+
     // Load auth state from localStorage on component mount
     const storedToken = localStorage.getItem("auth_token");
     const storedUser = localStorage.getItem("auth_user");
@@ -62,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Fetch CSRF token on mount
     fetchCsrfToken();
-  }, []);
+  }, [isPublicRoute]);
 
   const fetchCsrfToken = async () => {
     try {

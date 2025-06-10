@@ -63,7 +63,7 @@ export default function ShareAppointmentModal({
         const token = response.share.token;
 
         // Create a frontend-friendly URL that points to our share page
-        const frontendUrl = `${window.location.origin}/appointments/share/${token}`;
+        const frontendUrl = `${window.location.origin}/share/${token}`;
 
         // Save the modified share data with the frontend URL
         setShareData({
@@ -139,8 +139,8 @@ export default function ShareAppointmentModal({
         <DialogHeader>
           <DialogTitle>Share Appointment</DialogTitle>
           <DialogDescription>
-            Share &quot;{appointment.title}&quot; with others via link or add to
-            their calendar
+            Share &quot;{appointment.title}&quot; publicly with anyone who has
+            the link. No login required.
           </DialogDescription>
         </DialogHeader>
 
@@ -163,18 +163,26 @@ export default function ShareAppointmentModal({
           <TabsContent value="link" className="mt-4">
             {!shareData ? (
               <div className="flex flex-col items-center justify-center gap-4 py-4">
-                <p>
-                  Create a shareable link for this appointment that you can send
-                  to others.
-                </p>
+                <div className="text-center space-y-2">
+                  <p className="font-medium">🌐 Public Link</p>
+                  <p className="text-sm text-muted-foreground">
+                    Anyone with this link can view the appointment details
+                    without logging in.
+                  </p>
+                </div>
                 <Button onClick={handleCreateShare} disabled={isLoading}>
-                  {isLoading ? "Creating..." : "Create Share Link"}
+                  {isLoading ? "Creating..." : "Create Public Link"}
                 </Button>
               </div>
             ) : (
               <div className="space-y-4 py-2">
                 <div className="space-y-2">
-                  <Label htmlFor="share-link">Shareable Link</Label>
+                  <Label htmlFor="share-link">
+                    🌐 Public Link{" "}
+                    <span className="text-xs text-muted-foreground">
+                      (Anyone can view)
+                    </span>
+                  </Label>
                   <div className="flex items-center space-x-2">
                     <Input
                       id="share-link"
@@ -191,6 +199,10 @@ export default function ShareAppointmentModal({
                     </Button>
                   </div>
                 </div>
+                <div className="text-xs text-muted-foreground bg-blue-50 dark:bg-blue-950 p-3 rounded-lg">
+                  💡 This link allows anyone to view appointment details without
+                  signing up or logging in
+                </div>
                 {shareData.expires_at && (
                   <p className="text-sm text-muted-foreground">
                     This link will expire on{" "}
@@ -204,9 +216,9 @@ export default function ShareAppointmentModal({
           <TabsContent value="calendar" className="mt-4">
             {!shareData ? (
               <div className="flex flex-col items-center justify-center gap-4 py-4">
-                <p>Create a share link first to enable calendar options.</p>
+                <p>Create a public link first to enable calendar options.</p>
                 <Button onClick={handleCreateShare} disabled={isLoading}>
-                  {isLoading ? "Creating..." : "Create Share Link"}
+                  {isLoading ? "Creating..." : "Create Public Link"}
                 </Button>
               </div>
             ) : (
