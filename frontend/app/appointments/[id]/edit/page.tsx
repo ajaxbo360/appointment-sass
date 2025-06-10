@@ -232,6 +232,7 @@ export default function EditAppointment() {
         throw new Error("Appointment ID is missing");
       }
 
+      console.log("[Update Debug] Sending form data:", formData);
       await api.put(`/appointments/${params.id}`, formData);
 
       toast({

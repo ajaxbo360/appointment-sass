@@ -10,6 +10,7 @@ use App\Http\Requests\StoreAppointmentRequest;
 use App\Http\Requests\UpdateAppointmentRequest;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class AppointmentController extends Controller
 {
@@ -84,15 +85,21 @@ class AppointmentController extends Controller
         // Authorization check
         $this->authorize('update', $appointment);
 
+        // Debug logging
+        Log::info('Appointment update request data:', $request->all());
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'category_id' => 'required|exists:categories,id',
             'date' => 'required|date_format:Y-m-d',
             'time' => 'required|date_format:H:i',
+            'status' => 'nullable|string|in:scheduled,confirmed,completed,cancelled',
             'reminder_minutes' => 'nullable|integer|min:1|max:10080', // Optional reminder time (up to 1 week)
             'notifications_enabled' => 'nullable|boolean',
         ]);
+
+        Log::info('Validated appointment data:', $validated);
 
         // Combine date and time into start_time
         $startDateTime = Carbon::createFromFormat(
@@ -109,6 +116,7 @@ class AppointmentController extends Controller
             'category_id' => $validated['category_id'],
             'start_time' => $startDateTime,
             'end_time' => $endDateTime,
+            'status' => $validated['status'] ?? $appointment->status,
             'notifications_enabled' => $validated['notifications_enabled'] ?? $appointment->notifications_enabled,
             'reminder_minutes' => $validated['reminder_minutes'] ?? $appointment->reminder_minutes,
         ]);
