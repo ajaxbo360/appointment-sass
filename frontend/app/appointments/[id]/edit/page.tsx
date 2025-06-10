@@ -45,7 +45,9 @@ interface Appointment {
   title: string;
   description: string;
   category_id: number;
-  scheduled_at: string;
+  start_time: string;
+  end_time?: string;
+  status: string;
 }
 
 export default function EditAppointment() {
@@ -63,6 +65,7 @@ export default function EditAppointment() {
     category_id: "",
     date: "",
     time: "",
+    status: "scheduled",
   });
 
   useEffect(() => {
@@ -141,17 +144,49 @@ export default function EditAppointment() {
         );
         setCategories(categoryData);
 
-        // Parse the scheduled_at date
-        const scheduledDate = new Date(appointment.scheduled_at);
-        setDate(scheduledDate);
+        // Parse the appointment date from start_time
+        let parsedDate = null;
 
-        // Set form data
+        console.log("[Date Debug] Appointment data:", appointment);
+
+        if (appointment.start_time) {
+          try {
+            const scheduledDate = new Date(appointment.start_time);
+            // Check if the date is valid
+            if (!isNaN(scheduledDate.getTime())) {
+              parsedDate = scheduledDate;
+              setDate(scheduledDate);
+              console.log(
+                "[Date Debug] Successfully parsed date:",
+                scheduledDate
+              );
+            } else {
+              console.error(
+                "[Date Debug] Invalid date:",
+                appointment.start_time
+              );
+            }
+          } catch (error) {
+            console.error(
+              "[Date Debug] Error parsing start_time:",
+              error,
+              appointment.start_time
+            );
+          }
+        } else {
+          console.log(
+            "[Date Debug] No start_time field found in appointment data"
+          );
+        }
+
+        // Set form data with safe date handling
         setFormData({
           title: appointment.title,
           description: appointment.description || "",
           category_id: appointment.category_id.toString(),
-          date: format(scheduledDate, "yyyy-MM-dd"),
-          time: format(scheduledDate, "HH:mm"),
+          date: parsedDate ? format(parsedDate, "yyyy-MM-dd") : "",
+          time: parsedDate ? format(parsedDate, "HH:mm") : "",
+          status: appointment.status || "scheduled",
         });
       } catch (error) {
         console.error("Failed to fetch data:", error);
@@ -307,6 +342,44 @@ export default function EditAppointment() {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="status">Status</Label>
+              <Select
+                onValueChange={(value) => handleSelectChange("status", value)}
+                value={formData.status || "scheduled"}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="scheduled">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                      Scheduled
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="confirmed">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                      Confirmed
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="completed">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                      Completed
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="cancelled">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                      Cancelled
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
               <Label>Date</Label>
               <Popover>
                 <PopoverTrigger asChild>
@@ -318,7 +391,11 @@ export default function EditAppointment() {
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, "PPP") : <span>Pick a date</span>}
+                    {date && !isNaN(date.getTime()) ? (
+                      format(date, "PPP")
+                    ) : (
+                      <span>Pick a date</span>
+                    )}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">

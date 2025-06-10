@@ -16,6 +16,7 @@ class Kernel extends ConsoleKernel
     {
         $schedule->command('inspire')->hourly();
         $schedule->command('app:send-due-notifications')->everyMinute();
+        $schedule->command('app:update-appointment-statuses')->hourly();
     }
 
     /**
@@ -30,5 +31,6 @@ class Kernel extends ConsoleKernel
 
     protected $commands = [
         \App\Console\Commands\SendDueNotifications::class,
+        \App\Console\Commands\UpdateAppointmentStatuses::class,
     ];
 }
